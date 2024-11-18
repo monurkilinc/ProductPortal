@@ -3,18 +3,21 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ProductPortal.Business.Abstract;
 using ProductPortal.Business.Concrete;
+using ProductPortal.Core.Middleware;
 using ProductPortal.Core.Utilities.Results;
 using ProductPortal.Core.Utilities.Security;
 using ProductPortal.DataAccess.Abstract;
 using ProductPortal.DataAccess.Concrete;
 using ProductPortal.DataAccess.Contexts;
 using Serilog;
+using System.Configuration;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+// Add services to the container
 builder.Services.AddControllersWithViews();
 
-
+// Database Configuration
 builder.Services.AddDbContext<ProductPortalContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -22,41 +25,55 @@ builder.Services.AddDbContext<ProductPortalContext>(options =>
     )
 );
 
+// JWT Configuration
+var tokenOptions = builder.Configuration.GetSection("TokenOptions").Get<TokenOptions>();
 builder.Services.Configure<TokenOptions>(builder.Configuration.GetSection("TokenOptions"));
 
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.SaveToken = true;
+    options.RequireHttpsMetadata = false;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = tokenOptions.Issuer,
+        ValidAudience = tokenOptions.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(tokenOptions.SecurityKey)),
+        ClockSkew = TimeSpan.Zero
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            context.Token = context.Request.Cookies["jwt"];
+            return Task.CompletedTask;
+        }
+    };
+});
+
+// Dependency Injection
 builder.Services.AddScoped<ITokenHelper, JwtHelper>();
 builder.Services.AddScoped<IProductRepository, EfProductRepository>();
 builder.Services.AddScoped<IUserRepository, EfUserRepository>();
 builder.Services.AddScoped<IAuthService, AuthManager>();
-
-//Servislerin DI edilmesi   
 builder.Services.AddScoped<IProductService, ProductManager>();
 
-// JWT Configuration
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["TokenOptions:Issuer"],
-            ValidAudience = builder.Configuration["TokenOptions:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["TokenOptions:SecurityKey"]))
-        };
-    });
-
-builder.Services.AddControllers();
+// Additional Services
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//Result.cs de kullanýlan IHttpContextAccessor servisi icin gerekli
-builder.Services.AddHttpContextAccessor();
-
-//CORS politikasi
+// CORS Configuration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -68,52 +85,53 @@ builder.Services.AddCors(options =>
         });
 });
 
-//Result.cs de kullandýðýmýz ILogger servisi icin gerekli
+// Logging Configuration
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole(options =>
 {
-    //Loglarda timestamp formatýný ayarlar
     options.TimestampFormat = "[yyyy-MM-dd HH:mm:ss] ";
 });
 builder.Logging.AddDebug();
-
-//Log seviyelerinin yapilandirilmasi
 builder.Logging.SetMinimumLevel(LogLevel.Information);
-
-//Microsoft ve System loglarýnýn LogLevel.Warning seviyesinde loglanmasi
 builder.Logging.AddFilter("Microsoft", LogLevel.Warning);
 builder.Logging.AddFilter("System", LogLevel.Warning);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Database Initialization
+try
+{
+    await DbInitializer.Initialize(app.Services);
+    app.Logger.LogInformation("Database initialized successfully");
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "An error occurred while initializing the database");
+}
+
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseDeveloperExceptionPage();
 }
-
-//TraceId ve Timestamp duzgun calismasi icin middleware eklendi
-//app.Use(async (context, next) =>
-//{
-//    //TraceId'yi HTTP context'e eklendi
-//    context.TraceIdentifier = Guid.NewGuid().ToString();
-
-//    await next();
-//});
-app.UseStaticFiles();
-app.UseHttpsRedirection();
+app.UseRouting();
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseAuthorization();
-app.MapControllers();
-app.UseCors("AllowAll");
+app.UseMiddleware<AuthenticationMiddleware>();
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 
-//Uygulamanin baslangic logu
-app.Logger.LogInformation($"Uygulama {DateTime.UtcNow} Basladi. ");
 
+// Route Configuration
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Admin}/{action=Index}/{id?}");
+    pattern: "{controller=Login}/{action=Index}/{id?}"); 
+
+app.Logger.LogInformation($"Application started at {DateTime.UtcNow}");
+
 app.Run();

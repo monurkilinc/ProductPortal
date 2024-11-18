@@ -13,9 +13,10 @@ namespace ProductPortal.Web.Controllers
         {
             _productService = productService;
         }
-        [AllowAnonymous]
+        [Authorize]
         public IActionResult Index()
         {
+
             var getAll = _productService.GetAllAsync();
             if(getAll.Result.Success)
             {
@@ -28,7 +29,7 @@ namespace ProductPortal.Web.Controllers
         {
             return View();
         }
-        [AllowAnonymous]
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Product product)

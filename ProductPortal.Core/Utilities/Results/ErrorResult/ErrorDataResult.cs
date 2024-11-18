@@ -21,12 +21,13 @@ namespace ProductPortal.Core.Utilities.Results.ErrorResult
 
         public ErrorDataResult(ILogger<Result> logger,
                              IHttpContextAccessor httpContextAccessor,
-                             string message)
-            : base(logger, httpContextAccessor, default, false, message, 400)
+                             string message,
+                             int statusCode = 400)
+        : base(logger, httpContextAccessor, default(T), false, message, statusCode)
         {
         }
 
-        public ErrorDataResult() : base(default, false)
+        public ErrorDataResult() : base(default(T), false)
         {
         }
     }

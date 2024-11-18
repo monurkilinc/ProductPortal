@@ -19,7 +19,19 @@ namespace ProductPortal.Core.Utilities.Results.SuccessResult
            : base(logger, httpContextAccessor, data, true, message, statusCode)
         {
         }
+
+        public SuccessDataResult(ILogger<Result> logger,
+                              IHttpContextAccessor httpContextAccessor,
+                              T data)
+           : base(logger, httpContextAccessor, data, true, "İşlem başarılı", 200)
+        {
+        }
+
         public SuccessDataResult(T data) : base(data, true)
+        {
+        }
+
+        public SuccessDataResult() : base(default, true)
         {
         }
     }

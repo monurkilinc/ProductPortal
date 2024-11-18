@@ -68,35 +68,60 @@ namespace ProductPortal.Business.Concrete
             }
         }
 
-        public async Task<IDataResult<Core.Utilities.Security.AccessToken>> LoginAsync(UserLoginDTO userLoginDTO)
+        async Task<IDataResult<LoginResponse>> IAuthService.LoginAsync(UserLoginDTO userLoginDTO)
         {
             try
             {
+                _logger.LogInformation($"Login attempt for username: {userLoginDTO.Username}");
+
                 var user = await _userRepository.GetByUserName(userLoginDTO.Username);
                 if (user is null)
                 {
-                    return new ErrorDataResult<Core.Utilities.Security.AccessToken>(_logger, _httpContextAccessor, "Kullanıcı bulunamadı");
+                    _logger.LogWarning($"User not found: {userLoginDTO.Username}");
+                    return new ErrorDataResult<LoginResponse>(_logger, _httpContextAccessor, "Kullanıcı bulunamadı");
                 }
 
-                if (!HashingHelper.VerifyPasswordHash(userLoginDTO.Password, user.PasswordHash, user.PasswordSalt))
+                _logger.LogInformation($"User found. Hash length: {user.PasswordHash?.Length}, Salt length: {user.PasswordSalt?.Length}");
+                _logger.LogInformation($"Stored Hash: {Convert.ToBase64String(user.PasswordHash)}");
+                _logger.LogInformation($"Stored Salt: {Convert.ToBase64String(user.PasswordSalt)}");
+
+                bool isPasswordValid = HashingHelper.VerifyPasswordHash(userLoginDTO.Password, user.PasswordHash, user.PasswordSalt);
+                _logger.LogInformation($"Password verification result: {isPasswordValid}");
+
+                if (!isPasswordValid)
                 {
-                    return new ErrorDataResult<Core.Utilities.Security.AccessToken>(_logger, _httpContextAccessor, "Sifre hatali");
+                    _logger.LogWarning($"Invalid password for user: {userLoginDTO.Username}");
+                    return new ErrorDataResult<LoginResponse>(_logger, _httpContextAccessor, "Şifre hatalı");
                 }
 
-                var accessToken =await _tokenHelper.CreateAccessTokenAsync(user);
-                return new SuccessDataResult<Core.Utilities.Security.AccessToken>(
+                var accessToken = await _tokenHelper.CreateAccessTokenAsync(user);
+
+                var response = new LoginResponse
+                {
+                    AccessToken = accessToken,
+                    UserId = user.Id,
+                    Username = user.Username,
+                    Email = user.Email,
+                    Role = user.Role
+                };
+
+                _logger.LogInformation($"Login successful for user: {userLoginDTO.Username}");
+                return new SuccessDataResult<LoginResponse>(
                     _logger,
                     _httpContextAccessor,
-                    accessToken,
+                    response,
                     "Giriş başarılı"
-                    );
+                );
             }
             catch (Exception ex)
             {
-                return new ErrorDataResult<Core.Utilities.Security.AccessToken>(_logger, _httpContextAccessor, "Giriş sırasında bir hata oluştu!");
+                _logger.LogError(ex, "Login error for user: {Username}", userLoginDTO.Username);
+                return new ErrorDataResult<LoginResponse>(
+                    _logger,
+                    _httpContextAccessor,
+                    "Giriş sırasında bir hata oluştu!"
+                );
             }
-
-
         }
         public async Task<IDataResult<Core.Utilities.Security.AccessToken>> CreateAccessTokenAsync(User user)
         {
@@ -118,5 +143,24 @@ namespace ProductPortal.Business.Concrete
                     "Token oluşturulurken bir hata oluştu");
             }
         }
+
+        public async Task<IDataResult<User>> GetByUsernameAsync(string username)
+        {
+            try
+            {
+                var user = await _userRepository.GetByUserName(username);
+                if (user == null)
+                    return new ErrorDataResult<User>(_logger, _httpContextAccessor, "Kullanıcı bulunamadı");
+
+                return new SuccessDataResult<User>(_logger, _httpContextAccessor, user);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting user by username");
+                return new ErrorDataResult<User>(_logger, _httpContextAccessor, "Kullanıcı bilgileri alınırken hata oluştu");
+            }
+        }
+
+       
     }
 }

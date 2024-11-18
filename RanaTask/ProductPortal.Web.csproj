@@ -40,9 +40,4 @@
     <ProjectReference Include="..\RanaTask.Business\ProductPortal.Business.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="Filters\" />
-  </ItemGroup>
-
 </Project>

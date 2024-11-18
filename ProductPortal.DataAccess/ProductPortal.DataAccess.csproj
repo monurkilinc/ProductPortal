@@ -33,10 +33,4 @@
     <ProjectReference Include="..\ProductPortal.Core\ProductPortal.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="CrossCuttingConcerns\" />
-    <Folder Include="DataAccess\" />
-    <Folder Include="Repositories\" />
-  </ItemGroup>
-
 </Project>

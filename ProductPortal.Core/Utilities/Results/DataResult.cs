@@ -11,7 +11,13 @@ namespace ProductPortal.Core.Utilities.Results
 {
     public class DataResult<T> : Result, IDataResult<T>
     {
-        //Basari durumu,mesaj ve veri dondurmek icin olusturulmustur.
+        public T Data { get; }
+
+        public DataResult(T data, bool success) : base(success)
+        {
+            Data = data;
+        }
+
         public DataResult(ILogger<Result> logger,
                          IHttpContextAccessor httpContextAccessor,
                          T data,
@@ -22,13 +28,30 @@ namespace ProductPortal.Core.Utilities.Results
         {
             Data = data;
         }
-
-        //Basari durumu ve veri dondurmek icin olusturulmustur.
-        public DataResult(T data, bool success) : base(success)
-        {
-            Data = data;
-        }
-
-        public T Data { get; }
     }
+    //public class DataResult<T> : Result, IDataResult<T>
+    //{
+    //    public T Data { get; }
+
+    //    //Basari durumu ve veri dondurmek icin olusturulmustur.
+    //    public DataResult(T data, bool success) : base(success)
+    //    {
+    //        Data = data;
+    //    }
+
+    //    //Basari durumu,mesaj ve veri dondurmek icin olusturulmustur.
+    //    public DataResult(ILogger<Result> logger,
+    //                     IHttpContextAccessor httpContextAccessor,
+    //                     T data,
+    //                     bool success,
+    //                     string message,
+    //                     int statusCode = 200)
+    //        : base(logger, httpContextAccessor, success, message, statusCode)
+    //    {
+    //        Data = data;
+    //    }
+
+
+
+    //}
 }
