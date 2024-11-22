@@ -34,9 +34,4 @@
     <ProjectReference Include="..\ProductPortal.DataAccess\ProductPortal.DataAccess.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Mapping\" />
-    <Folder Include="ValidationRules\" />
-  </ItemGroup>
-
 </Project>

@@ -33,23 +33,19 @@ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
-    options.SaveToken = true;
-    options.RequireHttpsMetadata = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = tokenOptions.Issuer,
-        ValidAudience = tokenOptions.Audience,
+        ValidIssuer = builder.Configuration["TokenOptions:Issuer"],
+        ValidAudience = builder.Configuration["TokenOptions:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(tokenOptions.SecurityKey)),
-        ClockSkew = TimeSpan.Zero
+            Encoding.UTF8.GetBytes(builder.Configuration["TokenOptions:SecurityKey"]))
     };
     options.Events = new JwtBearerEvents
     {
@@ -60,7 +56,6 @@ builder.Services.AddAuthentication(options =>
         }
     };
 });
-
 // Dependency Injection
 builder.Services.AddScoped<ITokenHelper, JwtHelper>();
 builder.Services.AddScoped<IProductRepository, EfProductRepository>();
@@ -70,8 +65,7 @@ builder.Services.AddScoped<IProductService, ProductManager>();
 
 // Additional Services
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
 
 // CORS Configuration
 builder.Services.AddCors(options =>
@@ -97,6 +91,10 @@ builder.Logging.AddFilter("Microsoft", LogLevel.Warning);
 builder.Logging.AddFilter("System", LogLevel.Warning);
 
 var app = builder.Build();
+app.UseStaticFiles();
+app.UseRouting();
+
+await DbInitializer.Initialize(app.Services);
 
 // Database Initialization
 try
@@ -109,28 +107,24 @@ catch (Exception ex)
     app.Logger.LogError(ex, "An error occurred while initializing the database");
 }
 
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseDeveloperExceptionPage();
-}
-app.UseRouting();
+
+app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<AuthenticationMiddleware>();
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-
-
-
 // Route Configuration
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Login}/{action=Index}/{id?}"); 
+    pattern: "{controller=Index}/{action=Admin}/{id?}");
+
+// Configure the HTTP request pipeline
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+
 
 app.Logger.LogInformation($"Application started at {DateTime.UtcNow}");
 

@@ -1,9 +1,68 @@
-﻿
+﻿@using System.Globalization
+@model ProductPortal.Core.Entities.Concrete.Product
 @{
     ViewData["Title"] = "Edit";
-    Layout = "~/Views/_Layout.cshtml";
+    Layout = "~/Views/Shared/Layout.cshtml";
 }
 
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <div class="form-group">
+        <label>Mevcut Resim</label><br />
+        @if (!string.IsNullOrEmpty(Model.ImageURL))
+        {
+            <img id="currentImage" src="@Url.Content(Model.ImageURL)" alt="Ürün Resmi" style="max-width: 150px;" />
+
+            <br />
+        }
+    </div>
+
+    <div class="form-group">
+        <label for="ImageFile">Yeni Resim Yükle (Opsiyonel)</label>
+        <input type="file" name="ImageFile" id="ImageFile" class="form-control-file" accept="image/*" />
+        <div id="newImagePreview" style="margin-top: 10px;">
+            <!-- Yeni seçilen resmin önizlemesi burada gösterilecek -->
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="Name">Ürün Adı</label>
+        <input class="form-control" id="Name" name="Name" value="@Model.Name"  required />
+    </div>
+    <div class="form-group">
+        <label for="Description">Ürün Açıklaması</label>
+        <textarea class="form-control" id="Description" name="Description" rows="4" required>@Model.Description</textarea>
+    </div>
+    <div class="form-group">
+        <label for="Code">Ürün Kodu</label>
+        <input class="form-control" id="Code" name="Code" value="@Model.Code" required />
+    </div>
+    <div class="form-group">
+        <label for="Price">Fiyat</label>
+        <input type="number" step="0.01" min="0" class="form-control" id="Price" name="Price" value="@Model.Price.ToString("0.00", CultureInfo.InvariantCulture)" required />
+    </div>
+    <div class="form-group">
+        <label for="Stock">Stok</label>
+        <input type="number" class="form-control" id="Stock" name="Stock" value="@Model.Stock" required />
+    </div>
+    <button type="submit" class="btn btn-primary mr-2">Guncelle</button>
+    <a href="/Product/Index" class="btn btn-dark">İptal</a>
+</form>
+<script>
+    document.getElementById('ImageFile').addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                // Yeni resim seçildiğinde önizlemeyi göster
+                const preview = document.getElementById('newImagePreview');
+                preview.innerHTML = `<img src="${e.target.result}" alt="Yeni Resim" style="max-width: 150px;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+@* 
 <div class="card-body">
     <h4 class="card-title">Urun Guncelle</h4>
     <p class="card-description"> Urun Guncelle </p>
@@ -29,12 +88,12 @@
       
         <div class="form-group">
             <label for="Stock">Stock</label>
-            <input type="text" class="form-control" id="Stock" placeholder="Stock">
+            <input type="number" class="form-control" id="productStock" min="0" value="0" required>
         </div>
 
         <div class="form-group">
             <label for="Price">Price</label>
-            <input type="text" class="form-control" id="Price" placeholder="Price">
+            <input type="number" class="form-control" id="productPrice" step="0.01" min="0" value="0" required>
         </div>
 
         <div class="form-group">
@@ -54,3 +113,4 @@
         <button class="btn btn-dark">Iptal</button>
     </form>
 </div>
+ *@

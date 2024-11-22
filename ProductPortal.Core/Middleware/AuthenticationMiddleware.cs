@@ -25,10 +25,19 @@ namespace ProductPortal.Core.Middleware
             var path = context.Request.Path;
             _logger.LogInformation($"Request path: {path}");
 
-            // Auth ile ilgili path'leri bypass et
-            if (path.StartsWithSegments("/Login") ||
-                path.StartsWithSegments("/Auth") ||
-                path.StartsWithSegments("/swagger"))
+
+            var publicPaths = new[] {
+            "/Login",
+            "/api/Auth/login",
+            "/api/Auth/register",
+            "/swagger",
+            "/api/Auth/logout",
+            "/css",
+            "/js",
+            "/lib"
+        };
+
+            if (publicPaths.Any(p => path.StartsWithSegments(p, StringComparison.OrdinalIgnoreCase)))
             {
                 await _next(context);
                 return;
@@ -40,7 +49,15 @@ namespace ProductPortal.Core.Middleware
 
             if (string.IsNullOrEmpty(token))
             {
-                _logger.LogWarning("No token found. Redirecting to login page.");
+                _logger.LogWarning($"No token found for path: {path}");
+                if (context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ||
+                    path.StartsWithSegments("/api"))
+                {
+                    context.Response.StatusCode = 401;
+                    await context.Response.WriteAsJsonAsync(new { message = "Unauthorized" });
+                    return;
+                }
+
                 context.Response.Redirect("/Login/Index");
                 return;
             }
@@ -57,26 +74,19 @@ namespace ProductPortal.Core.Middleware
                 return;
             }
 
-            //if (!context.User.Identity.IsAuthenticated)
-            //{
-            //    _logger.LogWarning("User not authenticated. Redirecting to login page.");
-            //    context.Response.Redirect("/Login/Index");
-            //    return;
-            //}
-
-            // Admin kontrolü
-            if (path.StartsWithSegments("/Admin"))
+            try
             {
-                var userRole = context.User.FindFirst(ClaimTypes.Role)?.Value;
-                if (userRole != "Admin")
+                await _next(context);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during request processing");
+                if (!context.Response.HasStarted)
                 {
-                    _logger.LogWarning($"Unauthorized access attempt to admin area by user with role: {userRole}");
-                    context.Response.Redirect("/Login/Index");
-                    return;
+                    context.Response.StatusCode = 500;
+                    await context.Response.WriteAsJsonAsync(new { message = "Internal server error" });
                 }
             }
-
-            await _next(context);
         }
     }
 }

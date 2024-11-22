@@ -49,50 +49,35 @@
     <script>
         document.getElementById('loginForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-
             const errorMessage = document.getElementById('errorMessage');
             const submitButton = this.querySelector('button[type="submit"]');
             const spinner = document.getElementById('loginSpinner');
 
-            errorMessage.style.display = 'none';
-            submitButton.disabled = true;
-            spinner.classList.remove('d-none');
-
-            const loginData = {
-                username: document.getElementById('username').value,
-                password: document.getElementById('password').value
-            };
-
             try {
+                const loginData = {
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value
+                };
+
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
+                    credentials: 'include',
                     body: JSON.stringify(loginData)
                 });
 
                 const data = await response.json();
-                console.log('Login response:', data);
 
                 if (data.success) {
-                    // Store token
                     localStorage.setItem('token', data.data.accessToken.token);
-                    localStorage.setItem('user', JSON.stringify({
-                        id: data.data.userId,
-                        username: data.data.username,
-                        email: data.data.email,
-                        role: data.data.role
-                    }));
-
-                    // Redirect
-                    window.location.href = '/Admin/Index';
+                    window.location.replace('/Product/Index');
                 } else {
                     errorMessage.textContent = data.message;
                     errorMessage.style.display = 'block';
                 }
             } catch (error) {
-                console.error('Login error:', error);
                 errorMessage.textContent = 'Giriş sırasında bir hata oluştu';
                 errorMessage.style.display = 'block';
             } finally {

@@ -63,18 +63,21 @@ namespace ProductPortal.Web.Controllers.Api
             {
                 var result = await _authService.LoginAsync(loginDto);
                 if (!result.Success)
-                    return BadRequest(result);
+                    return BadRequest(new { success = false, message = result.Message });
 
-                // Set auth cookie
-                Response.Cookies.Append("jwt", result.Data.AccessToken.Token, new CookieOptions
+                SetAuthCookie(result.Data.AccessToken.Token);
+
+                return Ok(new
                 {
-                    HttpOnly = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddDays(1)
+                    success = true,
+                    data = new
+                    {
+                        accessToken = result.Data.AccessToken,
+                        userId = result.Data.UserId,
+                        username = result.Data.Username,
+                        role = result.Data.Role
+                    }
                 });
-
-                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -89,6 +92,17 @@ namespace ProductPortal.Web.Controllers.Api
         {
             Response.Cookies.Delete("jwt");
             return Ok(new { success = true, message = "Logged out successfully" });
+        }
+
+        private void SetAuthCookie(string token)
+        {
+            Response.Cookies.Append("jwt", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTime.UtcNow.AddDays(1)
+            });
         }
     }
 }

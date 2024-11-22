@@ -12,26 +12,13 @@ namespace ProductPortal.Web.Controllers
         {
             _logger = logger;
         }
-        [Authorize(Roles = "Admin")]
+        [HttpGet]
         public IActionResult Index()
         {
-            try
-            {
-                var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-                var username = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+            if (!User.Identity.IsAuthenticated)
+                return RedirectToAction("Index", "Login");
 
-                _logger.LogInformation($"Admin panel accessed by {username} with role {userRole}");
-
-                ViewBag.UserRole = userRole;
-                ViewBag.Username = username;
-
-                return View();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error accessing admin panel");
-                return RedirectToAction("Login", "Auth");
-            }
+            return View();
         }
     }
 }

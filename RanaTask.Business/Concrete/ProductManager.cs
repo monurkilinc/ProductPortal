@@ -28,40 +28,44 @@ namespace ProductPortal.Business.Concrete
         {
             try
             {
-                var existingProduct = await productRepository.GetProductByCodeAsync(product.Code);
-                if (existingProduct is not null)
+                // Aynı ürün koduna sahip başka bir ürün olup olmadığını kontrol et
+                if (await productRepository.GetProductByCodeAsync(product.Code) != null)
                 {
                     return new ErrorDataResult<Product>(
                         logger,
                         httpContextAccessor,
-                        "Bu ürün kodu kullaniliyor"
-                        );
-
-
+                        "Bu ürün kodu başka bir ürün tarafından kullanılıyor!");
                 }
+
+                // Validasyonlar
                 if (product.Price <= 0)
                 {
                     return new ErrorDataResult<Product>(
                         logger,
                         httpContextAccessor,
-                        "Urun fiyati 0'dan buyuk olmalidir");
+                        "Ürün fiyatı 0'dan büyük olmalıdır!");
                 }
 
-                var addedProduct = await productRepository.AddAsync(product);
+                // Ürünün oluşturulma tarihini ve aktiflik durumunu ayarla
+                product.CreatedDate = DateTime.Now;
+                product.IsActive = true;
+
+                // Ürünü ekle
+                var createdProduct = await productRepository.AddAsync(product);
+
                 return new SuccessDataResult<Product>(
                     logger,
                     httpContextAccessor,
-                    addedProduct,
-                    "Urun basariyla eklendi",
-                    200);
+                    createdProduct,
+                    "Ürün başarıyla oluşturuldu");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "AddAsync metodunda hata olustu. Product: {@Product}", product);
+                logger.LogError(ex, "CreateAsync metodunda hata oluştu. Product: {@Product}", product);
                 return new ErrorDataResult<Product>(
                     logger,
                     httpContextAccessor,
-                    "Urun eklenirken bir hata olustu!");
+                    "Ürün oluşturulurken bir hata oluştu!");
             }
 
         }
@@ -128,9 +132,18 @@ namespace ProductPortal.Business.Concrete
 
                 // Mevcut ürünün değişmeyecek bilgilerini koru
                 product.CreatedDate = existingProduct.CreatedDate;
+                product.IsActive = existingProduct.IsActive;
+
+                existingProduct.Name = product.Name;
+                existingProduct.Code = product.Code;
+                existingProduct.Description = product.Description;
+                existingProduct.Price = product.Price;
+                existingProduct.Stock = product.Stock;
+                existingProduct.ImageURL = product.ImageURL;
+                existingProduct.UpdatedDate = DateTime.Now;
 
                 // Güncelleme yap
-                var updatedProduct = await productRepository.UpdateAsync(product);
+                var updatedProduct = await productRepository.UpdateAsync(existingProduct);
 
                 return new SuccessDataResult<Product>(
                     logger,
