@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using ProductPortal.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -7,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ProductPortal.Core.Entities.DTOs
 {
-    public class UserRegisterDTO
+    public class UserCreateDTO
     {
         [Required]
         [MinLength(5)]
@@ -21,6 +23,11 @@ namespace ProductPortal.Core.Entities.DTOs
         [MinLength(5)]
         public string Password { get; set; }
 
+        public string Department { get; set; }
+        public bool IsAdmin { get; set; }
+        public bool Role { get; set; }
+        public int Id { get; set; }
         public bool IsActive { get; set; }
+        public IFormFile? ImageFile { get; set; }
     }
 }

@@ -3,8 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ProductPortal.Business.Abstract;
 using ProductPortal.Core.Entities.Concrete;
-using ProductPortal.Core.Utilities.Results.ErrorResult;
-using ProductPortal.Core.Utilities.Results.SuccessResult;
+using ProductPortal.Core.Utilities.Results;
 using System.Security.Policy;
 
 namespace ProductPortal.Web.Controllers
@@ -12,12 +11,14 @@ namespace ProductPortal.Web.Controllers
     public class ProductController : Controller
     {
         private readonly IProductService _productService;
+        private readonly IUserService _userService;
         private readonly ILogger<ProductController> _logger;
         private readonly IWebHostEnvironment _environment;
 
-        public ProductController(IProductService productService, ILogger<ProductController> logger, IWebHostEnvironment environment)
+        public ProductController(IProductService productService, IUserService userService, ILogger<ProductController> logger, IWebHostEnvironment environment)
         {
             _productService = productService;
+            _userService = userService;
             _logger = logger;
             _environment = environment;
         }
@@ -25,7 +26,11 @@ namespace ProductPortal.Web.Controllers
         public async Task<IActionResult> Index()
         {
 
-            var getAll =await _productService.GetAllAsync();
+            var username = User.Identity.Name;
+            var currentUser = await _userService.GetUserByNameAsync(username);
+            ViewBag.CurrentUser = currentUser.Data;
+
+            var getAll = await _productService.GetAllAsync();
             if (getAll.Success)
             {
                 return View(getAll.Data);

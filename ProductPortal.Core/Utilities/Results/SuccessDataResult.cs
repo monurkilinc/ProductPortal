@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProductPortal.Core.Utilities.Results.SuccessResult
+namespace ProductPortal.Core.Utilities.Results
 {
     //Basarili bir islem sonucunda ek bir veri dondurmek icin kullanilir
     public class SuccessDataResult<T> : DataResult<T>

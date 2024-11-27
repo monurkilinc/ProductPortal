@@ -4,10 +4,8 @@ using ProductPortal.Business.Abstract;
 using ProductPortal.Core.Entities.Concrete;
 using ProductPortal.Core.Utilities.Interfaces;
 using ProductPortal.Core.Utilities.Results;
-using ProductPortal.Core.Utilities.Results.ErrorResult;
-using ProductPortal.Core.Utilities.Results.SuccessResult;
 using ProductPortal.DataAccess.Abstract;
-using IResult = ProductPortal.Core.Utilities.Interfaces.IResult;
+using IResult = ProductPortal.Core.Utilities.Results.IResult;
 
 namespace ProductPortal.Business.Concrete
 {

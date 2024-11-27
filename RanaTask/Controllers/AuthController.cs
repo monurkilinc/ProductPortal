@@ -25,11 +25,11 @@ namespace ProductPortal.Web.Controllers.Api
 
         [AllowAnonymous]
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserRegisterDTO registerDto)
+        public async Task<IActionResult> Register([FromBody] UserCreateDTO createDto)
         {
             try
             {
-                var result = await _authService.RegisterAsync(registerDto);
+                var result = await _authService.RegisterAsync(createDto);
                 if (!result.Success)
                     return BadRequest(result);
 

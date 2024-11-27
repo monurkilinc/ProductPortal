@@ -1,0 +1,61 @@
+﻿@model ProductPortal.Core.Entities.DTOs.UserCreateDTO
+@{
+    ViewData["Title"] = "Yeni Kullanıcı";
+    Layout = "~/Views/Shared/Layout.cshtml";
+}
+
+<div class="row">
+    <div class="col-12 grid-margin">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Yeni Kullanıcı Ekle</h4>
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="ImageFile">Profil Resmi</label>
+                                <input type="file" asp-for="ImageFile" class="form-control" accept="image/*" />
+                                <span asp-validation-for="ImageFile" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Username">Kullanıcı Adı</label>
+                                <input asp-for="Username" class="form-control" required />
+                                <span asp-validation-for="Username" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Email">Email</label>
+                                <input asp-for="Email" class="form-control" required type="email" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Password">Şifre</label>
+                                <input asp-for="Password" class="form-control" required type="password" />
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Department">Departman</label>
+                                <input asp-for="Department" class="form-control" />
+                                <span asp-validation-for="Department" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="IsAdmin">Rol</label>
+                                <select asp-for="IsAdmin" class="form-control">
+                                    <option value="true">Admin</option>
+                                    <option value="false">Kullanıcı</option>
+                                </select>
+                            </div>
+                           
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary mr-2">Kaydet</button>
+                        <a asp-action="Index" class="btn btn-light">İptal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

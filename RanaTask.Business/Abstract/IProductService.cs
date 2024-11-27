@@ -1,6 +1,6 @@
 ﻿using ProductPortal.Core.Entities.Concrete;
 using ProductPortal.Core.Utilities.Interfaces;
-using IResult = ProductPortal.Core.Utilities.Interfaces.IResult;
+using IResult = ProductPortal.Core.Utilities.Results.IResult;
 
 namespace ProductPortal.Business.Abstract
 {

@@ -1,8 +1,88 @@
-﻿
+﻿@model IEnumerable<ProductPortal.Core.Entities.Concrete.User>
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Kullanıcı Yönetimi";
     Layout = "~/Views/Shared/Layout.cshtml";
 }
-
-<h1>Index</h1>
-
+<div class="row">
+    <div class="col-12 grid-margin">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="card-title">Kullanıcı Listesi</h4>
+                    <a href="@Url.Action("Create", "Admin")" class="btn btn-primary">
+                        <i class="mdi mdi-plus"></i> Yeni Kullanıcı Ekle
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Resim</th>
+                                <th>Kullanıcı Adı</th>
+                                <th>Sifre</th>
+                                <th>Email</th>
+                                <th>Departman</th>
+                                <th>Rol</th>
+                                <th>Durum</th>
+                                <th>Oluşturma Tarihi</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(user.ImageUrl))
+                                        {
+                                            <img src="@user.ImageUrl" alt="@user.Username" style="width: 50px; height: 50px; border-radius: 50%;" />
+                                        }
+                                        else
+                                        {
+                                            <img src="/images/default-avatar.png" alt="Default" style="width: 50px; height: 50px; border-radius: 50%;" />
+                                        }
+                                    </td>
+                                    <td>@user.Username</td>
+                                    <td>@(user.PasswordHash != null ? new string('*', 8) : string.Empty)</td>
+                                    <td>@user.Email</td>
+                                    <td>@user.Department</td>
+                                    <td>@user.Role</td>
+                                    <td>
+                                        @if (user.IsActive)
+                                        {
+                                            <span class="badge badge-success">Aktif</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-danger">Pasif</span>
+                                        }
+                                    </td>
+                                    <td>@user.CreatedDate.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <a href="@Url.Action("Edit", "Admin", new { id = user.Id })" class="btn btn-info btn-sm">
+                                            <i class="mdi mdi-pencil"></i>
+                                        </a>
+                                        <form asp-action="ToggleStatus" asp-controller="Admin" method="post" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@user.Id" />
+                                            <button type="submit" class="btn @(user.IsActive ? "btn-warning" : "btn-success") btn-sm">
+                                                <i class="mdi @(user.IsActive ? "mdi-block-helper" : "mdi-check")"></i>
+                                            </button>
+                                        </form>
+                                        <form asp-action="Delete" asp-route-id="@user.Id" method="post" style="display: inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('Bu kullanıcıyı silmek istediğinizden emin misiniz?');">
+                                                <i class="fas fa-trash"></i> Sil
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

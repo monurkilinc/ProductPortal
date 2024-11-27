@@ -1,0 +1,49 @@
+﻿@model ProductPortal.Core.Entities.DTOs.UserUpdateDTO
+@{
+    ViewData["Title"] = "Yeni Kullanıcı";
+    Layout = "~/Views/Shared/Layout.cshtml";
+}
+
+ <form asp-action="Edit" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <div class="form-group">
+        <label asp-for="ImageFile">Profil Resmi</label>
+        <input type="file" asp-for="ImageFile" class="form-control" accept="image/*" />
+        <span asp-validation-for="ImageFile" class="text-danger"></span>
+    </div>
+
+     <div class="form-group">
+        <label asp-for="Username">Kullanıcı Adı</label>
+        <input asp-for="Username" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label asp-for="Password">Şifre</label>
+        <input asp-for="Password" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label asp-for="Email">Email</label>
+        <input asp-for="Email" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label asp-for="Department">Departman</label>
+        <input asp-for="Department" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="IsAdmin">Rol</label>
+        <select asp-for="IsAdmin" class="form-control">
+            <option value="true">Admin</option>
+            <option value="false">Kullanıcı</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" asp-for="IsActive" id="isActiveSwitch">
+            <label class="custom-control-label" for="isActiveSwitch">Kullanıcı Aktif</label>
+        </div>
+    </div>
+   
+    <button type="submit" class="btn btn-primary mr-2">Guncelle</button>
+    <a href="/Admin/Index" class="btn btn-dark">İptal</a>
+</form> 

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProductPortal.Core.Utilities.Results.ErrorResult
+namespace ProductPortal.Core.Utilities.Results
 {
     public class ErrorDataResult<T> : DataResult<T>
     {
@@ -23,11 +23,11 @@ namespace ProductPortal.Core.Utilities.Results.ErrorResult
                              IHttpContextAccessor httpContextAccessor,
                              string message,
                              int statusCode = 400)
-        : base(logger, httpContextAccessor, default(T), false, message, statusCode)
+        : base(logger, httpContextAccessor, default, false, message, statusCode)
         {
         }
 
-        public ErrorDataResult() : base(default(T), false)
+        public ErrorDataResult() : base(default, false)
         {
         }
     }

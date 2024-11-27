@@ -40,4 +40,8 @@
     <ProjectReference Include="..\RanaTask.Business\ProductPortal.Business.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\" />
+  </ItemGroup>
+
 </Project>

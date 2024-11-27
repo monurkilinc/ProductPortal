@@ -10,40 +10,31 @@ using static System.Net.WebRequestMethods;
 
 namespace ProductPortal.Core.Utilities.Results
 {
-    public class Result
+    public abstract class Result :IResult
     {
-        //Loglama islemleri icin eklendi
-        private readonly ILogger<Result> _logger;
-
-        //HTTP context bilgilerine erismek icin eklendi
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        protected readonly ILogger<Result> _logger;
+        protected readonly IHttpContextAccessor _httpContextAccessor;
 
         //Islem sonucu, durum mesajı ve HTTP durum kodunun tutulması için oluşturulmuştur.
         //HTTP durum kodu 200 ,durum mesajı ve başarı durumu true olarak varsayılmıştır.
         public Result(ILogger<Result> logger, IHttpContextAccessor httpContextAccessor, bool success, string message, int statusCode = 200) : this(success)
         {
+            Success = success;
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
             Message = message;
             StatusCode = statusCode;
             LogResult();
         }
-        public Result(bool success)
+        protected Result(bool success)
         {
             Success = success;
         }
         public bool Success { get; }
         public string Message { get; }
-
-        //HTTP Status Code
         public int StatusCode { get; set; }
-        //Error Code
         public int ErrorCode { get; set; }
-
-        //İslemin gerceklestigi zamani tutar
         public DateTime Timestamp { get; } = DateTime.UtcNow;
-
-        //Islem takibi icin eklendi
         public string TraceId { get; } = Guid.NewGuid().ToString();
 
         //Islem sonucunu loglayan metod.
@@ -62,6 +53,22 @@ namespace ProductPortal.Core.Utilities.Results
                 _logger.LogError(
                     "Operation Failed - TraceId: {TraceId}, Error: {Message}, StatusCode: {StatusCode}, ErrorCode: {ErrorCode}, Timestamp: {Timestamp}",
                     TraceId, Message, StatusCode, ErrorCode, Timestamp);
+            }
+        }
+
+        public virtual async Task ExecuteAsync(HttpContext httpContext)
+        {
+            try
+            {
+                _logger.LogInformation($"Processing request: {httpContext.Request.Path}");
+
+                // İsteği bir sonraki middleware'e ilet
+                await httpContext.Response.WriteAsync("İşlem tamamlandı");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Request processing error");
+                httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
             }
         }
     }

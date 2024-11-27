@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProductPortal.Core.Utilities.Results.SuccessResult
+namespace ProductPortal.Core.Utilities.Results
 {
     //Basari durumu icin yardımcı sınıf
     public class SuccessResult : Result

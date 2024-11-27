@@ -11,6 +11,7 @@ namespace ProductPortal.DataAccess.Contexts
 
         public DbSet<Product> Products { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<UserPermission> UserPermissions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -60,7 +61,8 @@ namespace ProductPortal.DataAccess.Contexts
                 entity.Property(e => e.Email)
                       .IsRequired()
                       .HasMaxLength(100);
-
+                entity.Property(e => e.Department)
+                    .HasMaxLength(20);
                 entity.Property(e => e.PasswordHash)
                       .IsRequired();
 
@@ -74,6 +76,8 @@ namespace ProductPortal.DataAccess.Contexts
                 entity.Property(e => e.IsActive)
                       .IsRequired();
             });
+
+
         }
     }
 }

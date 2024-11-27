@@ -5,18 +5,24 @@
 namespace ProductPortal.Web.Migrations
 {
     /// <inheritdoc />
-    public partial class ProductPortal6 : Migration
+    public partial class ProductPortal5 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-
+            migrationBuilder.AddColumn<string>(
+                name: "ImageUrl",
+                table: "Users",
+                type: "nvarchar(max)",
+                nullable: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-
+            migrationBuilder.DropColumn(
+                name: "ImageUrl",
+                table: "Users");
         }
     }
 }
