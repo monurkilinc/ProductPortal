@@ -8,6 +8,9 @@ using System.Security.Policy;
 
 namespace ProductPortal.Web.Controllers
 {
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [Authorize]
     public class ProductController : Controller
     {
         private readonly IProductService _productService;

@@ -12,12 +12,15 @@ namespace ProductPortal.Business.Concrete
     public class ProductManager : IProductService
     {
         private readonly IProductRepository productRepository;
+        private readonly ICacheService cacheService;
         private readonly ILogger<Result> logger;
         private readonly IHttpContextAccessor httpContextAccessor;
 
-        public ProductManager(IProductRepository productRepository, ILogger<Result> logger, IHttpContextAccessor httpContextAccessor)
+        public ProductManager(IProductRepository productRepository, ICacheService cacheService, ILogger<Result> logger, IHttpContextAccessor httpContextAccessor)
         {
+
             this.productRepository = productRepository;
+            this.cacheService=cacheService;
             this.logger = logger;
             this.httpContextAccessor = httpContextAccessor;
         }
@@ -162,21 +165,33 @@ namespace ProductPortal.Business.Concrete
         {
             try
             {
-                var getProducts = (await productRepository.GetAllAsync()).ToList();
+                string cacheKey = "products_all";
+                var cachedProducts = cacheService.Get<List<Product>>(cacheKey);
+
+                if (cachedProducts != null)
+                {
+                    return new SuccessDataResult<List<Product>>(
+                        logger,
+                        httpContextAccessor,
+                        cachedProducts,
+                        "Urunler cache'den getirildi");
+                }
+
+                var products = (await productRepository.GetAllAsync()).ToList();
+                cacheService.Set(cacheKey, products, TimeSpan.FromMinutes(5));
+
                 return new SuccessDataResult<List<Product>>(
                     logger,
                     httpContextAccessor,
-                    getProducts,
+                    products,
                     "Urunler basariyla listelendi");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "GetAllAsync metodunda hata olustu!");
                 return new ErrorDataResult<List<Product>>(
                     logger,
                     httpContextAccessor,
-                    "Urunler listelenirken bir hata olustu!"
-                    );
+                    "Urunler listelenirken bir hata olustu!");
             }
         }
         public async Task<IDataResult<Product>> GetByCodeAsync(string code)

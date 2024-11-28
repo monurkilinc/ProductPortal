@@ -10,9 +10,16 @@ using ProductPortal.Core.Utilities.Security;
 using ProductPortal.DataAccess.Abstract;
 using ProductPortal.DataAccess.Concrete;
 using ProductPortal.DataAccess.Contexts;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Text;
 using Microsoft.AspNetCore.Server.IIS;
 using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.DependencyInjection;
+using ProductPortal.Core.Exceptions;
+using ProductPortal.Core.Utilities.Interfaces;
+using Serilog;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,10 +86,10 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = tokenOptions.Issuer,
-        ValidAudience = tokenOptions.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenOptions.SecurityKey)),
-        ClockSkew = TimeSpan.Zero
+        ValidIssuer = builder.Configuration["TokenOptions:Issuer"],
+        ValidAudience = builder.Configuration["TokenOptions:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["TokenOptions:SecurityKey"]))
     };
     options.Events = new JwtBearerEvents
     {
@@ -95,35 +102,60 @@ builder.Services.AddAuthentication(options =>
 
 });
 //Swagger icin eklendi
-builder.Services.AddSwaggerGen(c =>
+//builder.Services.AddSwaggerGen(c =>
+//{
+//    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Product API", Version = "v1" });
+
+//    // JWT ayarý
+//    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+//    {
+//        Type = SecuritySchemeType.Http,
+//        Scheme = "bearer",
+//        BearerFormat = "JWT"
+//    });
+
+//    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+//    {
+//        Type = SecuritySchemeType.Http,
+//        Scheme = "bearer",
+//        BearerFormat = "JWT"
+//    });
+//    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+//    {
+//        {
+//            new OpenApiSecurityScheme
+//            {
+//                Reference = new OpenApiReference
+//                {
+//                    Type = ReferenceType.SecurityScheme,
+//                    Id = "Bearer"
+//                }
+//            },
+//            Array.Empty<string>()
+//        }
+//    });
+//});
+
+builder.Host.UseSerilog((context, config) =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Product Portal API", Version = "v1" });
-
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
+    config.WriteTo.File("logs/api-.txt", rollingInterval: RollingInterval.Day)
+          .WriteTo.Console();
 });
 
+//Redis Cache
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = "localhost:6379";
+    options.InstanceName = "ProductPortal_";
+
+});
+
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<ProductPortalContext>();
+
+builder.Services.AddScoped<ICacheService, RedisCacheService>();
+builder.Services.AddScoped<IFileUploadService, FileUploadManager>();
+builder.Services.AddScoped<IFileStorageService, AzureBlobStorageService>();
 
 // Repository registrations
 builder.Services.AddScoped<IProductRepository, EfProductRepository>();
@@ -134,10 +166,6 @@ builder.Services.AddScoped<ITokenHelper, JwtHelper>();
 builder.Services.AddScoped<IAuthService, AuthManager>();
 builder.Services.AddScoped<IProductService, ProductManager>();
 builder.Services.AddScoped<IUserService, UserManager>();
-
-
-
-
 
 
 // Logging Configuration
@@ -154,11 +182,10 @@ builder.Logging.AddFilter("System", LogLevel.Warning);
 
 var app = builder.Build();
 
-//Swagger Middleware UI Kullanýmý icin eklendi
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Product Portal API v1"));
+app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Product Portal API v1"));
 }
 
 app.UseRouting();
@@ -167,14 +194,22 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseStaticFiles();
 app.UseHttpsRedirection();
+app.MapHealthChecks("/health");
 
 app.UseMiddleware<AuthenticationMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<PerformanceMiddleware>();
+app.UseMiddleware<RateLimitingMiddleware>();
+
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
 
 // Route and endpoints configuration
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Index}/{action=Admin}/{id?}");
+    pattern: "{controller= Product}/{action=Index}/{id?}");
 
 app.Logger.LogInformation($"Application started at {DateTime.UtcNow}");
 app.Run();
