@@ -12,6 +12,8 @@ using ProductPortal.DataAccess.Concrete;
 using ProductPortal.DataAccess.Contexts;
 using System.Text;
 using Microsoft.AspNetCore.Server.IIS;
+using Microsoft.OpenApi.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Form dosya boyutu limitini ayarla
@@ -38,6 +40,21 @@ builder.Services.Configure<KestrelServerOptions>(options =>
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 
+// API versiyonlama servisleri
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+});
+
+builder.Services.AddVersionedApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+
 // Database Configuration
 builder.Services.AddDbContext<ProductPortalContext>(options =>
     options.UseSqlServer(
@@ -62,10 +79,10 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["TokenOptions:Issuer"],
-        ValidAudience = builder.Configuration["TokenOptions:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(builder.Configuration["TokenOptions:SecurityKey"]))
+        ValidIssuer = tokenOptions.Issuer,
+        ValidAudience = tokenOptions.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenOptions.SecurityKey)),
+        ClockSkew = TimeSpan.Zero
     };
     options.Events = new JwtBearerEvents
     {
@@ -75,7 +92,38 @@ builder.Services.AddAuthentication(options =>
             return Task.CompletedTask;
         }
     };
+
 });
+//Swagger icin eklendi
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Product Portal API", Version = "v1" });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
 
 // Repository registrations
 builder.Services.AddScoped<IProductRepository, EfProductRepository>();
@@ -90,17 +138,6 @@ builder.Services.AddScoped<IUserService, UserManager>();
 
 
 
-// CORS Configuration
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll",
-        builder =>
-        {
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
-        });
-});
 
 
 // Logging Configuration
@@ -117,36 +154,27 @@ builder.Logging.AddFilter("System", LogLevel.Warning);
 
 var app = builder.Build();
 
-app.UseStaticFiles();
+//Swagger Middleware UI Kullanýmý icin eklendi
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Product Portal API v1"));
+}
+
 app.UseRouting();
-app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseStaticFiles();
+app.UseHttpsRedirection();
+
 app.UseMiddleware<AuthenticationMiddleware>();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// Database Initialization - Tek bir kez çaðýrýn
-try
-{
-    using (var scope = app.Services.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<ProductPortalContext>();
-        await DbInitializer.Initialize(scope.ServiceProvider);
-        app.Logger.LogInformation("Database initialized successfully");
-    }
-}
-catch (Exception ex)
-{
-    app.Logger.LogError(ex, "An error occurred while initializing the database");
-}
-
-// Route Configuration
+// Route and endpoints configuration
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Index}/{action=Admin}/{id?}");
 
 app.Logger.LogInformation($"Application started at {DateTime.UtcNow}");
-
-app.Run();
-
 app.Run();

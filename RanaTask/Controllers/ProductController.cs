@@ -182,44 +182,44 @@ namespace ProductPortal.Web.Controllers
                 return RedirectToAction("Index");
             }
         }
-        [Authorize]
-        [HttpGet]
-        [Route("~/Product/GetProducts")]
-        public async Task<IActionResult> GetProducts()
-        {
-            try
-            {
-                var result = await _productService.GetAllAsync();
-                return Json(new { success = true, data = result.Data });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = "Ürünler yüklenirken hata oluştu" });
-            }
-        }
-        [Authorize]
-        [HttpGet]
-        [Route("~/Product/GetProduct/{id}")]
-        public async Task<IActionResult> GetProduct(int id)
-        {
-            try
-            {
-                var result = await _productService.GetByIdAsync(id);
+        //[Authorize]
+        //[HttpGet]
+        //[Route("~/Product/GetProducts")]
+        //public async Task<IActionResult> GetProducts()
+        //{
+        //    try
+        //    {
+        //        var result = await _productService.GetAllAsync();
+        //        return Json(new { success = true, data = result.Data });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return Json(new { success = false, message = "Ürünler yüklenirken hata oluştu" });
+        //    }
+        //}
+        //[Authorize]
+        //[HttpGet]
+        //[Route("~/Product/GetProduct/{id}")]
+        //public async Task<IActionResult> GetProduct(int id)
+        //{
+        //    try
+        //    {
+        //        var result = await _productService.GetByIdAsync(id);
 
-                if (result.Success && result.Data != null)
-                {
-                    return Ok(new { success = true, data = result.Data });
-                }
-                else
-                {
-                    return Ok(new { success = false, message = "Ürün bulunamadı" });
-                }
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, message = "Ürün bilgileri alınamadı" });
-            }
-        }
+        //        if (result.Success && result.Data != null)
+        //        {
+        //            return Ok(new { success = true, data = result.Data });
+        //        }
+        //        else
+        //        {
+        //            return Ok(new { success = false, message = "Ürün bulunamadı" });
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { success = false, message = "Ürün bilgileri alınamadı" });
+        //    }
+        //}
         // Yüklenen resim dosyasını kaydeden metod
         private async Task<string> SaveImage(IFormFile ImageFile)
         {
