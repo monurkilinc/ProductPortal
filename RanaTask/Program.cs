@@ -20,6 +20,7 @@ using ProductPortal.Core.Utilities.Interfaces;
 using Serilog;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -101,10 +102,6 @@ builder.Services.AddAuthentication(options =>
     };
 
 });
-//Swagger icin eklendi
-//builder.Services.AddSwaggerGen(c =>
-//{
-//    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Product API", Version = "v1" });
 
 //    // JWT ayarý
 //    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -114,12 +111,7 @@ builder.Services.AddAuthentication(options =>
 //        BearerFormat = "JWT"
 //    });
 
-//    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-//    {
-//        Type = SecuritySchemeType.Http,
-//        Scheme = "bearer",
-//        BearerFormat = "JWT"
-//    });
+//  
 //    c.AddSecurityRequirement(new OpenApiSecurityRequirement
 //    {
 //        {
@@ -135,7 +127,11 @@ builder.Services.AddAuthentication(options =>
 //        }
 //    });
 //});
-
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Product Portal API", Version = "v1" });
+});
+   
 builder.Host.UseSerilog((context, config) =>
 {
     config.WriteTo.File("logs/api-.txt", rollingInterval: RollingInterval.Day)
@@ -166,7 +162,15 @@ builder.Services.AddScoped<ITokenHelper, JwtHelper>();
 builder.Services.AddScoped<IAuthService, AuthManager>();
 builder.Services.AddScoped<IProductService, ProductManager>();
 builder.Services.AddScoped<IUserService, UserManager>();
+builder.Services.AddScoped<IProductService, ProductManager>();
 
+
+builder.Services.AddScoped<ICustomerService, CustomerManager>();
+builder.Services.AddScoped<IOrderService, OrderManager>();
+builder.Services.AddScoped<ISupportTicketService, SupportTicketManager>();
+builder.Services.AddScoped<ICustomerRepository, EfCustomerRepository>();
+builder.Services.AddScoped<IOrderRepository, EfOrderRepository>();
+builder.Services.AddScoped<ISupportTicketRepository, EfSupportTicketRepository>();
 
 // Logging Configuration
 builder.Logging.ClearProviders();
@@ -182,13 +186,14 @@ builder.Logging.AddFilter("System", LogLevel.Warning);
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Product Portal API v1"));
-}
+
 
 app.UseRouting();
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Product Portal API v1");
+});
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
@@ -209,7 +214,7 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 // Route and endpoints configuration
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller= Product}/{action=Index}/{id?}");
+    pattern: "{controller=Product}/{action=Index}/{id?}");
 
 app.Logger.LogInformation($"Application started at {DateTime.UtcNow}");
 app.Run();
