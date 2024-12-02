@@ -131,7 +131,8 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Product Portal API", Version = "v1" });
 });
-   
+
+
 builder.Host.UseSerilog((context, config) =>
 {
     config.WriteTo.File("logs/api-.txt", rollingInterval: RollingInterval.Day)
@@ -199,7 +200,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseStaticFiles();
 app.UseHttpsRedirection();
-app.MapHealthChecks("/health");
 
 app.UseMiddleware<AuthenticationMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();

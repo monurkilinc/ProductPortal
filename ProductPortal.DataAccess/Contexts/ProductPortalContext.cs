@@ -12,6 +12,12 @@ namespace ProductPortal.DataAccess.Contexts
         public DbSet<Product> Products { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserPermission> UserPermissions { get; set; }
+        public DbSet<Customer> Customers { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<SupportTicket> SupportTickets { get; set; }
+        public DbSet<SupportMessage> SupportMessages { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -77,7 +83,20 @@ namespace ProductPortal.DataAccess.Contexts
                       .IsRequired();
             });
 
+            modelBuilder.Entity<Customer>()
+                      .HasMany(c => c.Orders)
+                      .WithOne(o => o.Customer)
+                      .HasForeignKey(o => o.CustomerId);
 
+            modelBuilder.Entity<Order>()
+                      .HasMany(o => o.OrderItems)
+                      .WithOne(oi => oi.Order)
+                      .HasForeignKey(oi => oi.OrderId);
+
+            modelBuilder.Entity<SupportTicket>()
+                     .HasMany(t => t.Messages)
+                     .WithOne(m => m.Ticket)
+                     .HasForeignKey(m => m.TicketId);
         }
     }
 }
