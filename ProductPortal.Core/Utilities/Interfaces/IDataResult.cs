@@ -9,7 +9,6 @@ namespace ProductPortal.Core.Utilities.Interfaces
 {
     public interface IDataResult<T> : IResult
     {
-        //Islemin sonucunda dondurulecek veri
         T Data { get; }
     }
 }

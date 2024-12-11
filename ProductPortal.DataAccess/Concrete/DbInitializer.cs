@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ProductPortal.Core.Entities.Concrete;
 using ProductPortal.Core.Utilities.Security;
+using ProductPortal.DataAccess.Abstract;
 using ProductPortal.DataAccess.Contexts;
 
 namespace ProductPortal.DataAccess.Concrete
@@ -31,15 +32,16 @@ namespace ProductPortal.DataAccess.Concrete
                         logger.LogInformation("Creating admin user...");
 
                         // Admin şifresi: "admin123"
-                        byte[] passwordHash, passwordSalt;
-                        HashingHelper.CreatePasswordHash("admin123", out passwordHash, out passwordSalt);
+                        //byte[] passwordHash, passwordSalt;
+                        //HashingHelper.CreatePasswordHash("admin123", out passwordHash, out passwordSalt);
 
                         var adminUser = new User
                         {
                             Username = "admin",
-                            Email = "admin@productportal.com",
-                            PasswordHash = passwordHash,
-                            PasswordSalt = passwordSalt,
+                            Email = "admin@example.com",
+                            Password = "admin123",
+                            //PasswordHash = passwordHash, // 64 byte
+                            //PasswordSalt = passwordSalt, // 128 byte
                             Role = "Admin",
                             IsActive = true,
                             CreatedDate = DateTime.UtcNow

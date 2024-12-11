@@ -2,6 +2,7 @@
 using ProductPortal.Core.Entities;
 using ProductPortal.DataAccess.Abstract;
 using ProductPortal.DataAccess.Contexts;
+using System.Linq.Expressions;
 
 namespace ProductPortal.DataAccess.Concrete
 {
@@ -42,6 +43,11 @@ namespace ProductPortal.DataAccess.Concrete
         public async Task<List<T>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();
+        }
+
+        public Task<T> GetByFilterAsync(Expression<Func<T, bool>> filter)
+        {
+            throw new NotImplementedException();
         }
 
         public virtual async Task<T> GetByIdAsync(int id)

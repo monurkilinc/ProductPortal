@@ -27,6 +27,8 @@
                                 <th>Fiyat</th>
                                 <th>Stok</th>
                                 <th>Eklenme Tarihi</th>
+                                <th>Guncellenme Tarihi</th>
+                                <th>Aktiflik</th>
                                 <th>İşlemler</th>
                             </tr>
                         </thead>
@@ -50,6 +52,9 @@
                                     <td>@product.Price.ToString("0.00") ₺</td>
                                     <td>@product.Stock</td>
                                     <td>@product.CreatedDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@product.UpdatedDate</td>
+                                    <td>@product.IsActive</td>
+
                                     <td>
                                         <a href="@Url.Action("Edit", "Product", new { id = product.Id })" class="btn btn-info btn-sm">
                                             <i class="mdi mdi-pencil"></i>

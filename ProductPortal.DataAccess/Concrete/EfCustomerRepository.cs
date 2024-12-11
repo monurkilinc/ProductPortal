@@ -16,12 +16,18 @@ namespace ProductPortal.DataAccess.Concrete
         {
         }
 
+        public Task<Customer> GetByEmailAsync(string email)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<IEnumerable<Customer>> GetCustomersWithOrders()
         {
             return await _context.Customers
-                .Include(x=>x.Orders)
-                .ThenInclude(x=>x.OrderItems)
-                .ToListAsync();
+                .Include(c => c.Orders)
+            .ThenInclude(o => o.OrderItems)
+            .AsNoTracking()
+            .ToListAsync();
         }
     }
 }

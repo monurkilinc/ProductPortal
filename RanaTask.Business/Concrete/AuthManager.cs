@@ -24,55 +24,49 @@ namespace ProductPortal.Business.Concrete
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
         }
-        async Task<IDataResult<LoginResponse>> IAuthService.LoginAsync(UserLoginDTO userLoginDTO)
-        {
-            try
+            async Task<IDataResult<LoginResponse>> IAuthService.LoginAsync(UserLoginDTO userLoginDTO)
             {
-
-                var user = await _userRepository.GetByUserName(userLoginDTO.Username);
-                if (user is null)
+                try
                 {
-                    return new ErrorDataResult<LoginResponse>(_logger, _httpContextAccessor, "Kullanıcı bulunamadı");
+
+                    var user = await _userRepository.GetByUserName(userLoginDTO.Username);
+                    if (user is null)
+                    {
+                        return new ErrorDataResult<LoginResponse>(_logger, _httpContextAccessor, "Kullanıcı bulunamadı");
+                    }
+                    if (!user.IsActive)
+                    {
+                        return new ErrorDataResult<LoginResponse>(_logger, _httpContextAccessor, "Hesabınız pasif durumdadır");
+
+                    }
+                   
+                    var accessToken = await _tokenHelper.CreateAccessTokenAsync(user);
+
+                    var response = new LoginResponse
+                    {
+                        AccessToken = accessToken,
+                        UserId = user.Id,
+                        Username = user.Username,
+                        Email = user.Email,
+                        Role = user.Role
+                    };
+
+                    return new SuccessDataResult<LoginResponse>(
+                        _logger,
+                        _httpContextAccessor,
+                        response,
+                        "Giriş başarılı"
+                    );
                 }
-                if (!user.IsActive)
+                catch (Exception ex)
                 {
-                    return new ErrorDataResult<LoginResponse>(_logger, _httpContextAccessor, "Hesabınız pasif durumdadır");
-
+                    return new ErrorDataResult<LoginResponse>(
+                        _logger,
+                        _httpContextAccessor,
+                        "Giriş sırasında bir hata oluştu!"
+                    );
                 }
-                bool isPasswordValid = HashingHelper.VerifyPasswordHash(userLoginDTO.Password, user.PasswordHash, user.PasswordSalt);
-
-                if (!isPasswordValid)
-                {
-                    return new ErrorDataResult<LoginResponse>(_logger, _httpContextAccessor, "Şifre hatalı");
-                }
-
-                var accessToken = await _tokenHelper.CreateAccessTokenAsync(user);
-
-                var response = new LoginResponse
-                {
-                    AccessToken = accessToken,
-                    UserId = user.Id,
-                    Username = user.Username,
-                    Email = user.Email,
-                    Role = user.Role
-                };
-
-                return new SuccessDataResult<LoginResponse>(
-                    _logger,
-                    _httpContextAccessor,
-                    response,
-                    "Giriş başarılı"
-                );
             }
-            catch (Exception ex)
-            {
-                return new ErrorDataResult<LoginResponse>(
-                    _logger,
-                    _httpContextAccessor,
-                    "Giriş sırasında bir hata oluştu!"
-                );
-            }
-        }
         public async Task<IDataResult<Core.Utilities.Security.AccessToken>> CreateAccessTokenAsync(User user)
         {
             try
@@ -113,29 +107,21 @@ namespace ProductPortal.Business.Concrete
         {
             try
             {
-                //Email kontrolü
                 var emailExists = await _userRepository.GetByEmail(usercreateDto.Email);
                 if (emailExists is not null)
                 {
                     return new ErrorDataResult<User>(_logger, _httpContextAccessor, "Bu email adresi kullanılmaktadır.");
                 }
-                //Kullanıcı adı kontrolü
                 var usernameExists = await _userRepository.GetByUserName(usercreateDto.Username);
                 if (usernameExists is not null)
                 {
                     return new ErrorDataResult<User>(_logger, _httpContextAccessor, "Bu kullanıcı adı kullanılmaktadır.");
                 }
 
-                //Sifre hashleme
-                byte[] passwordHash, passwordSalt;
-                HashingHelper.CreatePasswordHash(usercreateDto.Password, out passwordHash, out passwordSalt);
-
                 var user = new User
                 {
                     Email = usercreateDto.Email,
                     Username = usercreateDto.Username,
-                    PasswordHash = passwordHash,
-                    PasswordSalt = passwordSalt,
                     IsActive = true,
                     Role = "User",
                     CreatedDate = DateTime.UtcNow

@@ -1,0 +1,32 @@
+﻿@using System.Globalization
+@model ProductPortal.Core.Entities.Concrete.Customer
+@{
+    ViewData["Title"] = "Edit";
+    Layout = "~/Views/Shared/Layout.cshtml";
+}
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <div class="form-group">
+        <label asp-for="Name">Müşteri Adı</label>
+        <input asp-for="Name" class="form-control" required />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Email">Email</label>
+        <input asp-for="Email" class="form-control" required />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Phone">Telefon</label>
+        <input asp-for="Phone" class="form-control" required />
+        <span asp-validation-for="Phone" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary mr-2">Güncelle</button>
+    <a href="@Url.Action("Index", "Customer")" class="btn btn-dark">İptal</a>
+</form>

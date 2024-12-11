@@ -9,8 +9,8 @@ namespace ProductPortal.Web.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    [Produces(MediaTypeNames.Application.Json)] // Ortak content type'lar
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)] //Ortak response type'lar
+    [Produces(MediaTypeNames.Application.Json)] 
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)] 
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public class ProductsController : ControllerBase
     {
@@ -23,7 +23,6 @@ namespace ProductPortal.Web.Controllers
             this.logger = logger;
         }
        
-        //Urun ekler
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -41,7 +40,6 @@ namespace ProductPortal.Web.Controllers
             return BadRequest(result);
         }
 
-        //Urun gunceller
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -61,7 +59,6 @@ namespace ProductPortal.Web.Controllers
             return BadRequest(result);
         }
 
-        //Urun siler
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -75,7 +72,6 @@ namespace ProductPortal.Web.Controllers
             return BadRequest(result);
         }
 
-        //Tum urunlerin listesini getirir
         [HttpGet]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -90,7 +86,6 @@ namespace ProductPortal.Web.Controllers
             return BadRequest(result);
         }
 
-        //Id'ye gore urun getirir
         [HttpGet("{id}")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -105,7 +100,6 @@ namespace ProductPortal.Web.Controllers
             return BadRequest(result.Message);
         }
 
-        //Urun koduna gore urun getirir
         [HttpGet("code/{code}")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]

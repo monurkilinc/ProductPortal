@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ProductPortal.Business.Abstract;
 using ProductPortal.Core.Entities.DTOs;
+using ProductPortal.Core.Utilities.Security;
 
 namespace ProductPortal.Web.Controllers.Api
 {
@@ -29,6 +30,7 @@ namespace ProductPortal.Web.Controllers.Api
         {
             try
             {
+
                 var result = await _authService.RegisterAsync(createDto);
                 if (!result.Success)
                     return BadRequest(result);
@@ -37,7 +39,6 @@ namespace ProductPortal.Web.Controllers.Api
                 if (!tokenResult.Success)
                     return BadRequest(tokenResult);
 
-                // Set auth cookie
                 Response.Cookies.Append("jwt", tokenResult.Data.Token, new CookieOptions
                 {
                     HttpOnly = true,
@@ -81,7 +82,6 @@ namespace ProductPortal.Web.Controllers.Api
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Login error");
                 return StatusCode(500, new { success = false, message = "Login failed" });
             }
         }

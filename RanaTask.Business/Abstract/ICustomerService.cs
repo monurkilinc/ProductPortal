@@ -12,9 +12,12 @@ namespace ProductPortal.Business.Abstract
     public interface ICustomerService
     {
         Task<IDataResult<Customer>> AddAsync(Customer customer);
-        Task<IDataResult<List<Customer>>> GetAllCustomersWithOrdersAsync();
-        Task<IDataResult<Customer>> GetByIdAsync(int id);
         Task<IDataResult<Customer>> UpdateAsync(Customer customer);
         Task<IResult> DeleteAsync(int id);
+
+        Task<IDataResult<List<Customer>>> GetAllCustomersWithOrdersAsync();
+        Task<IDataResult<Customer>> GetByIdAsync(int id);
+        Task<Customer> GetCustomerByEmailAsync(string email);
+
     }
 }

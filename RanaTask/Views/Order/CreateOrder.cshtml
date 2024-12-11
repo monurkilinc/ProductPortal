@@ -1,0 +1,140 @@
+﻿@{
+    ViewData["Title"] = "CreateOrder";
+    Layout = "~/Views/Shared/Layout.cshtml";
+}
+<form asp-action="CreateOrder" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        <label>Müşteri</label>
+        <select name="CustomerId" class="form-control" required>
+            <option value="">Müşteri Seçiniz</option>
+            @foreach (var customer in ViewBag.Customers)
+            {
+                <option value="@customer.Id">@customer.Name (@customer.Email)</option>
+            }
+        </select>
+    </div>
+    <div id="orderItems">
+        <div class="order-item mb-3">
+            <div class="form-group">
+                <label>Ürün</label>
+                <select name="ProductIds[]" class="form-control product-select" required>
+                    <option value="">Ürün Seçiniz</option>
+                    @foreach (var product in ViewBag.Products)
+                    {
+                        <option value="@product.Id" data-price="@product.Price">@product.Name - @product.Price.ToString("C")</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Miktar:</label>
+                <input type="number" name="Quantities[]" class="form-control quantity-input" min="1" value="1" required />
+            </div>
+            <div class="form-group">
+                <label>Ürün Toplamı:</label>
+                <input type="text" class="form-control item-total" readonly />
+            </div>
+            <button type="button" class="btn btn-danger remove-item">Ürünü Kaldır</button>
+            <hr />
+        </div>
+    </div>
+
+    <button type="button" class="btn btn-success mb-3" id="addItem">Yeni Ürün Ekle</button>
+
+    <div class="form-group">
+        <label>Genel Toplam:</label>
+        <input id="TotalAmount" type="text" class="form-control" readonly />
+    </div>
+
+    <div class="form-group">
+        <label>Tahmini Teslimat</label>
+        <input name="EstimatedDeliveryDate" type="date" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>Ödeme Durumu</label>
+        <select name="PaymentStatus" class="form-control">
+            <option value="Beklemede">Beklemede</option>
+            <option value="Ödendi">Ödendi</option>
+            <option value="İptal">İptal</option>
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary mr-2">Siparişi Oluştur</button>
+    <a href="/Order/Index" class="btn btn-dark">İptal</a>
+</form>
+
+@section Scripts {
+    <script>
+        function updateItemTotal(orderItem) {
+            const productSelect = orderItem.querySelector('.product-select');
+            const quantityInput = orderItem.querySelector('.quantity-input');
+            const itemTotalInput = orderItem.querySelector('.item-total');
+
+            const selectedOption = productSelect.options[productSelect.selectedIndex];
+            if (!selectedOption.value) {
+                itemTotalInput.value = "";
+                updateTotalAmount();
+                return;
+            }
+
+            const productPrice = parseFloat(selectedOption.getAttribute("data-price"));
+            const quantity = parseInt(quantityInput.value);
+
+            if (!isNaN(productPrice) && !isNaN(quantity) && quantity > 0) {
+                const totalAmount = productPrice * quantity;
+                itemTotalInput.value = totalAmount.toFixed(2) + " TL";
+            } else {
+                itemTotalInput.value = "";
+            }
+            updateTotalAmount();
+        }
+
+        function updateTotalAmount() {
+            const itemTotals = document.querySelectorAll('.item-total');
+            let total = 0;
+
+            itemTotals.forEach(item => {
+                const value = parseFloat(item.value.replace(' TL', ''));
+                if (!isNaN(value)) {
+                    total += value;
+                }
+            });
+
+            document.getElementById("TotalAmount").value = total.toFixed(2) + " TL";
+        }
+
+        document.getElementById("addItem").addEventListener("click", function () {
+            const orderItems = document.getElementById("orderItems");
+            const newItem = orderItems.querySelector('.order-item').cloneNode(true);
+
+            newItem.querySelector('.quantity-input').value = "1";
+            newItem.querySelector('.item-total').value = "";
+            newItem.querySelector('.product-select').selectedIndex = 0;
+
+            orderItems.appendChild(newItem);
+            attachEventListeners(newItem);
+        });
+
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-item')) {
+                const orderItems = document.getElementById('orderItems');
+                if (orderItems.querySelectorAll('.order-item').length > 1) {
+                    e.target.closest('.order-item').remove();
+                    updateTotalAmount();
+                }
+            }
+        });
+
+        function attachEventListeners(orderItem) {
+            const productSelect = orderItem.querySelector('.product-select');
+            const quantityInput = orderItem.querySelector('.quantity-input');
+
+            productSelect.addEventListener('change', () => updateItemTotal(orderItem));
+            quantityInput.addEventListener('input', () => updateItemTotal(orderItem));
+        }
+
+        document.querySelectorAll('.order-item').forEach(attachEventListeners);
+    </script>
+}

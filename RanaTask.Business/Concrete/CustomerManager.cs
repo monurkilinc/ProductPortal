@@ -26,16 +26,31 @@ namespace ProductPortal.Business.Concrete
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public Task<IDataResult<Customer>> AddAsync(Customer customer)
+        public async Task<IDataResult<Customer>> AddAsync(Customer entity)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var customer = await _customerRepository.AddAsync(entity);
+                return new SuccessDataResult<Customer>(_logger, _httpContextAccessor, customer, "Müşteri başarıyla eklendi");
+            }
+            catch (Exception ex)
+            {
+                return new ErrorDataResult<Customer>(_logger, _httpContextAccessor, "Müşteri eklenirken hata oluştu");
+            }
         }
 
-        public Task<Core.Utilities.Results.IResult> DeleteAsync(int id)
+        public async Task<Core.Utilities.Results.IResult> DeleteAsync(int id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                await _customerRepository.DeleteAsync(id);
+                return new SuccessResult(_logger, _httpContextAccessor, "Müşteri silindi");
+            }
+            catch (Exception ex)
+            {
+                return new ErrorResult(_logger, _httpContextAccessor, "Müşteri silinemedi");
+            }
         }
-
         public async Task<IDataResult<List<Customer>>> GetAllCustomersWithOrdersAsync()
         {
             try
@@ -45,18 +60,56 @@ namespace ProductPortal.Business.Concrete
             }
             catch (Exception ex)
             {
-                return new ErrorDataResult<List<Customer>>(_logger, _httpContextAccessor, ex.Message);
+                return new ErrorDataResult<List<Customer>>(_logger, _httpContextAccessor, "Müşteriler listelenemedi");
             }
         }
 
-        public Task<IDataResult<Customer>> GetByIdAsync(int id)
+        public async Task<IDataResult<Customer>> GetByIdAsync(int id)
+        {
+            try
+            {
+                var customer = await _customerRepository.GetByIdAsync(id);
+                return new SuccessDataResult<Customer>(_logger, _httpContextAccessor, customer);
+            }
+            catch (Exception ex)
+            {
+                return new ErrorDataResult<Customer>(_logger, _httpContextAccessor, "Müşteri bulunamadı");
+            }
+        }
+
+        public Task<Customer> GetCustomerByEmailAsync(string email)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IDataResult<Customer>> UpdateAsync(Customer customer)
+        public async Task<IDataResult<Customer>> UpdateAsync(Customer customer)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var existingCustomer = await _customerRepository.GetByIdAsync(customer.Id);
+                if (existingCustomer == null)
+                    return new ErrorDataResult<Customer>(_logger, _httpContextAccessor, "Müşteri bulunamadı");
+
+                var customers = await _customerRepository.GetAllAsync();
+                if (existingCustomer.Email != customer.Email &&
+                    customers.Any(x => x.Email == customer.Email))
+                    return new ErrorDataResult<Customer>(_logger, _httpContextAccessor, "Email kullanımda");
+
+                existingCustomer.Name = customer.Name;
+                existingCustomer.Email = customer.Email;
+                existingCustomer.Phone = customer.Phone;
+                existingCustomer.UpdatedDate = DateTime.Now;
+
+                var updatedCustomer = await _customerRepository.UpdateAsync(existingCustomer);
+                return new SuccessDataResult<Customer>(_logger, _httpContextAccessor, updatedCustomer, "Müşteri güncellendi");
+            }
+            catch (Exception ex)
+            {
+                return new ErrorDataResult<Customer>(_logger, _httpContextAccessor, "Güncelleme başarısız");
+            }
         }
+        
+
+       
     }
 }

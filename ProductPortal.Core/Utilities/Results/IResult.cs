@@ -12,6 +12,5 @@ namespace ProductPortal.Core.Utilities.Results
         bool Success { get; }
         string Message { get; }
         Task ExecuteAsync(HttpContext httpContext);
-
     }
 }

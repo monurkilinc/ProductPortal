@@ -49,7 +49,6 @@ namespace ProductPortal.Core.Middleware
 
             if (string.IsNullOrEmpty(token))
             {
-                _logger.LogWarning($"No token found for path: {path}");
                 if (context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ||
                     path.StartsWithSegments("/api"))
                 {
@@ -80,7 +79,6 @@ namespace ProductPortal.Core.Middleware
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during request processing");
                 if (!context.Response.HasStarted)
                 {
                     context.Response.StatusCode = 500;

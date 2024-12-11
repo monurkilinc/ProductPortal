@@ -8,8 +8,6 @@ using System.Security.Policy;
 
 namespace ProductPortal.Web.Controllers
 {
-    [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
     [Authorize]
     public class ProductController : Controller
     {
@@ -46,7 +44,6 @@ namespace ProductPortal.Web.Controllers
             return View();
         }
 
-        // POST: Product/Create
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -56,20 +53,16 @@ namespace ProductPortal.Web.Controllers
             {
                 if (!ModelState.IsValid)
                 {
-                    // Model doğrulaması başarısızsa sayfayı yeniden döndür
+                    
                     return View(product);
                 }
 
-                // Eğer dosya varsa resmi kaydet-
                 if (ImageFile != null && ImageFile.Length > 0)
                 {
                     product.ImageURL = await SaveImage(ImageFile);
                 }
 
-                // Ürünün oluşturulma tarihini ayarla
                 product.CreatedDate = DateTime.Now;
-
-                // Ürünü ekle
                 var result = await _productService.AddAsync(product);
 
                 if (result.Success)
@@ -119,14 +112,12 @@ namespace ProductPortal.Web.Controllers
 
                     return Json(new { success = false, message = "Invalid model state", errors = errorMessages });
                 }
-                // Eğer yeni bir resim yüklenmişse, bu resmi kaydet ve ImageURL'i güncelle
                 if (ImageFile != null && ImageFile.Length > 0)
                 {
                     product.ImageURL = await SaveImage(ImageFile);
                 }
                 else
                 {
-                    // Yeni bir resim yüklenmemişse, mevcut resim URL'sini koru
                     var existingProduct = await _productService.GetByIdAsync(product.Id);
                     if (existingProduct.Success && existingProduct.Data != null)
                     {
@@ -156,7 +147,6 @@ namespace ProductPortal.Web.Controllers
             {
                 return Json(new { success = false, message = ex.Message });
             }
-
         }
 
         [Authorize]
@@ -180,50 +170,11 @@ namespace ProductPortal.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting product with ID: {ProductId}", id);
+               
                 TempData["ErrorMessage"] = "Ürün silinirken bir hata oluştu.";
                 return RedirectToAction("Index");
             }
         }
-        //[Authorize]
-        //[HttpGet]
-        //[Route("~/Product/GetProducts")]
-        //public async Task<IActionResult> GetProducts()
-        //{
-        //    try
-        //    {
-        //        var result = await _productService.GetAllAsync();
-        //        return Json(new { success = true, data = result.Data });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return Json(new { success = false, message = "Ürünler yüklenirken hata oluştu" });
-        //    }
-        //}
-        //[Authorize]
-        //[HttpGet]
-        //[Route("~/Product/GetProduct/{id}")]
-        //public async Task<IActionResult> GetProduct(int id)
-        //{
-        //    try
-        //    {
-        //        var result = await _productService.GetByIdAsync(id);
-
-        //        if (result.Success && result.Data != null)
-        //        {
-        //            return Ok(new { success = true, data = result.Data });
-        //        }
-        //        else
-        //        {
-        //            return Ok(new { success = false, message = "Ürün bulunamadı" });
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { success = false, message = "Ürün bilgileri alınamadı" });
-        //    }
-        //}
-        // Yüklenen resim dosyasını kaydeden metod
         private async Task<string> SaveImage(IFormFile ImageFile)
         {
             if (ImageFile == null || ImageFile.Length == 0)
@@ -239,7 +190,6 @@ namespace ProductPortal.Web.Controllers
             }
             return $"/template/assets/images/products/{fileName}";
         }
-
     }
 }
 

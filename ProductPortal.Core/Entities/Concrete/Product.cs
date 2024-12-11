@@ -24,5 +24,6 @@ namespace ProductPortal.Core.Entities.Concrete
         public decimal Price { get; set; }
 
         public string? ImageURL { get; set; }
+
     }
 }

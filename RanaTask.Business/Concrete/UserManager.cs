@@ -6,7 +6,6 @@ using ProductPortal.Core.Utilities.Results;
 using ProductPortal.DataAccess.Abstract;
 using ProductPortal.Business.Abstract;
 using ProductPortal.Core.Entities.DTOs;
-using ProductPortal.Core.Utilities.Security;
 using Microsoft.AspNetCore.Hosting;
 
 namespace ProductPortal.Business.Concrete
@@ -78,11 +77,6 @@ namespace ProductPortal.Business.Concrete
 
                 };
 
-                byte[] passwordHash, passwordSalt;
-                HashingHelper.CreatePasswordHash(dto.Password, out passwordHash, out passwordSalt);
-                user.PasswordHash = passwordHash;
-                user.PasswordSalt = passwordSalt;
-
                 await _userRepository.AddAsync(user);
                 return new SuccessDataResult<User>(_logger, _httpContextAccessor, user, "Kullanıcı oluşturuldu");
             }
@@ -114,7 +108,6 @@ namespace ProductPortal.Business.Concrete
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Kullanıcı silme işlemi sırasında hata oluştu");
                 return new ErrorResult(_logger, _httpContextAccessor, "Kullanıcı silinemedi");
             }
         }
@@ -207,13 +200,9 @@ namespace ProductPortal.Business.Concrete
                     return new ErrorDataResult<User>(_logger, _httpContextAccessor, "Kullanıcı bulunamadı");
                 }
 
-                // Yeni resim yüklendiyse
                 if (updateDto.ImageFile != null)
                 {
-                    // Eski resmi sil
                     DeleteImage(user.ImageUrl);
-
-                    // Yeni resmi kaydet
                     user.ImageUrl = await SaveImageAsync(updateDto.ImageFile);
                 }
 
@@ -223,13 +212,6 @@ namespace ProductPortal.Business.Concrete
                 user.Department = !string.IsNullOrEmpty(updateDto.Department) ? updateDto.Department : user.Department;
                 user.Role = updateDto.IsAdmin.HasValue && updateDto.IsAdmin.Value ? "Admin" : "User";
                 user.IsActive = updateDto.IsActive;
-                if (!string.IsNullOrEmpty(updateDto.Password))
-                {
-                    byte[] passwordHash, passwordSalt;
-                    HashingHelper.CreatePasswordHash(updateDto.Password, out passwordHash, out passwordSalt);
-                    user.PasswordHash = passwordHash;
-                    user.PasswordSalt = passwordSalt;
-                }
 
                 await _userRepository.UpdateAsync(user);
                 return new SuccessDataResult<User>(_logger, _httpContextAccessor, user, "Kullanıcı güncellendi");
@@ -239,6 +221,7 @@ namespace ProductPortal.Business.Concrete
                 return new ErrorDataResult<User>(_logger, _httpContextAccessor, "Kullanıcı güncellenemedi");
             }
         }
+
         public async Task<IDataResult<List<User>>> GetUsersByRoleAsync(string role)
         {
             try
@@ -258,31 +241,22 @@ namespace ProductPortal.Business.Concrete
                 if (imageFile == null || imageFile.Length == 0)
                     return null;
 
-                // Güvenli dosya adı oluştur
                 var fileName = $"{Guid.NewGuid()}{Path.GetExtension(imageFile.FileName)}";
-
-                // Uploads klasörünün yolunu al
                 var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
 
-                // Klasör yoksa oluştur
                 if (!Directory.Exists(uploadsFolder))
                     Directory.CreateDirectory(uploadsFolder);
 
-                // Dosya yolunu oluştur
                 var filePath = Path.Combine(uploadsFolder, fileName);
-
-                // Dosyayı kaydet
-                using (var stream = new FileStream(filePath, FileMode.Create))
+               using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await imageFile.CopyToAsync(stream);
                 }
 
-                // URL'i döndür
                 return $"/uploads/{fileName}";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Resim kaydedilirken hata oluştu");
                 return null;
             }
         }
@@ -303,10 +277,6 @@ namespace ProductPortal.Business.Concrete
             }
         }
 
-
-
-
-
         private void DeleteImage(string imageUrl)
         {
             if (string.IsNullOrEmpty(imageUrl)) return;
@@ -321,7 +291,6 @@ namespace ProductPortal.Business.Concrete
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Resim silinirken hata oluştu");
             }
         }
 

@@ -1,0 +1,192 @@
+﻿@model Order
+@{
+    ViewData["Title"] = "Edit Order";
+    Layout = "~/Views/Shared/Layout.cshtml";
+}
+<form asp-action="EditOrder" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="Id" value="@Model.Id" />
+
+    <div class="form-group">
+        <label>Müşteri</label>
+        <input type="text" class="form-control" value="@Model.Customer?.Name" readonly />
+        <input type="hidden" name="CustomerId" value="@Model.CustomerId" />
+    </div>
+
+    <div id="orderItems">
+        @if (Model.OrderItems != null && Model.OrderItems.Any())
+        {
+            foreach (var orderItem in Model.OrderItems)
+            {
+                <div class="order-item mb-3">
+                    <div class="form-group">
+                        <label>Ürün</label>
+                        <select name="ProductIds[]" class="form-control product-select" required>
+                            <option value="">Ürün Seçiniz</option>
+                            @if (ViewBag.Products != null)
+                            {
+                                foreach (var product in ViewBag.Products)
+                                {
+                                    @if (product.Id == orderItem.ProductId)
+                                    {
+                                        <option value="@product.Id" data-price="@product.Price" selected>
+                                            @product.Name - @product.Price.ToString("C")
+                                        </option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@product.Id" data-price="@product.Price">
+                                            @product.Name - @product.Price.ToString("C")
+                                        </option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Miktar:</label>
+                        <input type="number" name="Quantities[]" class="form-control quantity-input"
+                               min="1" value="@orderItem.Quantity" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Ürün Toplamı:</label>
+                        <input type="text" class="form-control item-total" readonly />
+                    </div>
+                    <button type="button" class="btn btn-danger remove-item">Ürünü Kaldır</button>
+                    <hr />
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-warning">Bu siparişte ürün bulunmamaktadır.</div>
+        }
+    </div>
+
+    <button type="button" class="btn btn-success mb-3" id="addItem">Yeni Ürün Ekle</button>
+
+    <div class="form-group">
+        <label>Genel Toplam:</label>
+        <input id="TotalAmount" type="text" class="form-control" readonly value="@Model.TotalAmount.ToString("C")" />
+    </div>
+
+    <div class="form-group">
+        <label>Tahmini Teslimat</label>
+        <input name="EstimatedDeliveryDate" type="date" class="form-control"
+               value="@Model.EstimatedDeliveryDate?.ToString("yyyy-MM-dd")" />
+    </div>
+
+    <div class="form-group">
+        <label>Sipariş Durumu</label>
+        <select name="Status" class="form-control">
+            @foreach (var status in new[] { "Beklemede", "Hazırlanıyor", "Kargoda", "Tamamlandı", "İptal" })
+            {
+                @if (Model.Status == status)
+                {
+                    <option value="@status" selected>@status</option>
+                }
+                else
+                {
+                    <option value="@status">@status</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Ödeme Durumu</label>
+        <select name="PaymentStatus" class="form-control">
+            @foreach (var paymentStatus in new[] { "Beklemede", "Ödendi", "İptal" })
+            {
+                @if (Model.PaymentStatus == paymentStatus)
+                {
+                    <option value="@paymentStatus" selected>@paymentStatus</option>
+                }
+                else
+                {
+                    <option value="@paymentStatus">@paymentStatus</option>
+                }
+            }
+        </select>
+    </div>
+
+
+    <button type="submit" class="btn btn-primary mr-2">Güncelle</button>
+    <a href="/Order/Index" class="btn btn-dark">İptal</a>
+</form>
+
+@section Scripts {
+    <script>
+        function updateItemTotal(orderItem) {
+            const productSelect = orderItem.querySelector('.product-select');
+            const quantityInput = orderItem.querySelector('.quantity-input');
+            const itemTotalInput = orderItem.querySelector('.item-total');
+
+            const selectedOption = productSelect.options[productSelect.selectedIndex];
+            if (!selectedOption.value) {
+                itemTotalInput.value = "";
+                updateTotalAmount();
+                return;
+            }
+
+            const productPrice = parseFloat(selectedOption.getAttribute("data-price"));
+            const quantity = parseInt(quantityInput.value);
+
+            if (!isNaN(productPrice) && !isNaN(quantity) && quantity > 0) {
+                const totalAmount = productPrice * quantity;
+                itemTotalInput.value = totalAmount.toFixed(2) + " TL";
+            } else {
+                itemTotalInput.value = "";
+            }
+            updateTotalAmount();
+        }
+
+        function updateTotalAmount() {
+            const itemTotals = document.querySelectorAll('.item-total');
+            let total = 0;
+
+            itemTotals.forEach(item => {
+                const value = parseFloat(item.value.replace(' TL', ''));
+                if (!isNaN(value)) {
+                    total += value;
+                }
+            });
+
+            document.getElementById("TotalAmount").value = total.toFixed(2) + " TL";
+        }
+
+        document.getElementById("addItem").addEventListener("click", function () {
+            const orderItems = document.getElementById("orderItems");
+            const newItem = orderItems.querySelector('.order-item').cloneNode(true);
+
+            newItem.querySelector('.quantity-input').value = "1";
+            newItem.querySelector('.item-total').value = "";
+            newItem.querySelector('.product-select').selectedIndex = 0;
+
+            orderItems.appendChild(newItem);
+            attachEventListeners(newItem);
+        });
+
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-item')) {
+                const orderItems = document.getElementById('orderItems');
+                if (orderItems.querySelectorAll('.order-item').length > 1) {
+                    e.target.closest('.order-item').remove();
+                    updateTotalAmount();
+                }
+            }
+        });
+
+        function attachEventListeners(orderItem) {
+            const productSelect = orderItem.querySelector('.product-select');
+            const quantityInput = orderItem.querySelector('.quantity-input');
+
+            productSelect.addEventListener('change', () => updateItemTotal(orderItem));
+            quantityInput.addEventListener('input', () => updateItemTotal(orderItem));
+        }
+
+        // Sayfa yüklendiğinde mevcut ürünlerin tutarlarını hesapla
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.order-item').forEach(updateItemTotal);
+        });
+    </script>
+}

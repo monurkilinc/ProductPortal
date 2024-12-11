@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace ProductPortal.Core.Utilities.Results
 {
-    //Hata durumu icin yardımcı sınıf
     public class ErrorResult : Result
     {
         public ErrorResult(ILogger<Result> logger,

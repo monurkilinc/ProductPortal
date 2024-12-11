@@ -6,5 +6,7 @@ namespace ProductPortal.DataAccess.Abstract
     {
         Task<IEnumerable<Product>> GetProductsByPriceRange(decimal minPrice, decimal maxPrice);
         Task<Product> GetProductByCodeAsync(string code);
+        Task<IEnumerable<Product>> GetAllAsync();
+
     }
 }

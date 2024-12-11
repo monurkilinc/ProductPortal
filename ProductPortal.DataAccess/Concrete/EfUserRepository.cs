@@ -27,16 +27,12 @@ namespace ProductPortal.DataAccess.Concrete
                 if (user == null)
                     throw new ArgumentNullException(nameof(user));
 
-                _logger.LogInformation($"Kullanıcı silme işlemi başlatıldı. ID: {user.Id}");
-
                 _context.Users.Remove(user);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation($"Kullanıcı başarıyla silindi. ID: {user.Id}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Kullanıcı silinirken hata oluştu. ID: {user.Id}");
                 throw;
             }
         }

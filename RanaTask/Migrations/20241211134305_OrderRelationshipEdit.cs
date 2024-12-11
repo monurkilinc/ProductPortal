@@ -5,7 +5,7 @@
 namespace ProductPortal.Web.Migrations
 {
     /// <inheritdoc />
-    public partial class ProductPortal2 : Migration
+    public partial class OrderRelationshipEdit : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

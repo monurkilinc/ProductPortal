@@ -1,10 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using ProductPortal.Core.Utilities.Security;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ProductPortal.Core.Middleware
 {

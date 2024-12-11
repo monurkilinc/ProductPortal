@@ -22,7 +22,6 @@ namespace ProductPortal.Core.Exceptions
 
         public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken cancellationToken)
         {
-            _logger.LogError(exception, "Hata oluştu");
 
             var response = new
             {

@@ -10,17 +10,13 @@ using ProductPortal.Core.Utilities.Security;
 using ProductPortal.DataAccess.Abstract;
 using ProductPortal.DataAccess.Concrete;
 using ProductPortal.DataAccess.Contexts;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System.Text;
-using Microsoft.AspNetCore.Server.IIS;
 using Microsoft.OpenApi.Models;
-using Microsoft.Extensions.DependencyInjection;
-using ProductPortal.Core.Exceptions;
 using ProductPortal.Core.Utilities.Interfaces;
 using Serilog;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
-using Microsoft.AspNetCore.Builder;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -103,30 +99,6 @@ builder.Services.AddAuthentication(options =>
 
 });
 
-//    // JWT ayarý
-//    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-//    {
-//        Type = SecuritySchemeType.Http,
-//        Scheme = "bearer",
-//        BearerFormat = "JWT"
-//    });
-
-//  
-//    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-//    {
-//        {
-//            new OpenApiSecurityScheme
-//            {
-//                Reference = new OpenApiReference
-//                {
-//                    Type = ReferenceType.SecurityScheme,
-//                    Id = "Bearer"
-//                }
-//            },
-//            Array.Empty<string>()
-//        }
-//    });
-//});
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Product Portal API", Version = "v1" });
@@ -149,6 +121,9 @@ builder.Services.AddStackExchangeRedisCache(options =>
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ProductPortalContext>();
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+    ConnectionMultiplexer.Connect("localhost:6379"));
 
 builder.Services.AddScoped<ICacheService, RedisCacheService>();
 builder.Services.AddScoped<IFileUploadService, FileUploadManager>();
@@ -190,6 +165,9 @@ var app = builder.Build();
 
 
 app.UseRouting();
+app.UseStaticFiles();
+app.UseHttpsRedirection();
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
@@ -198,8 +176,6 @@ app.UseSwaggerUI(c =>
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseStaticFiles();
-app.UseHttpsRedirection();
 
 app.UseMiddleware<AuthenticationMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -212,9 +188,10 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 });
 
 // Route and endpoints configuration
+app.MapControllers(); // API routes
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Product}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Logger.LogInformation($"Application started at {DateTime.UtcNow}");
 app.Run();

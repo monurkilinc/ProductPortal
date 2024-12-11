@@ -33,7 +33,6 @@ namespace ProductPortal.Web.Controllers.API
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ürün silinirken hata oluştu");
                 return StatusCode(500, "Ürün silinemedi");
             }
         }

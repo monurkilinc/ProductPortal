@@ -39,22 +39,6 @@ namespace ProductPortal.Web.Controllers
                 TempData["ErrorMessage"] = "Kullanıcılar listelenirken hata oluştu";
                 return View(new List<User>());
             }
-            //try
-            //{
-
-            //    var result = await _userService.GetAllUsersAsync();
-            //    if (!result.Success)
-            //    {
-            //        TempData["ErrorMessage"] = result.Message;
-            //        return View(new List<User>());
-            //    }
-            //    return View(result.Data ?? new List<User>());
-            //}
-            //catch (Exception ex)
-            //{
-            //    TempData["ErrorMessage"] = "Kullanıcılar listelenirken hata oluştu";
-            //    return View(new List<User>());
-            //}
         }
         [HttpGet]
         public IActionResult Create()
@@ -76,7 +60,6 @@ namespace ProductPortal.Web.Controllers
                 return View(createDto);
             }
 
-            TempData["SuccessMessage"] = "Kullanıcı başarıyla oluşturuldu.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -86,7 +69,6 @@ namespace ProductPortal.Web.Controllers
             var result = await _userService.GetUserByIdAsync(id);
             if (!result.Success)
             {
-                TempData["ErrorMessage"] = result.Message;
                 return RedirectToAction(nameof(Index));
             }
 
@@ -114,11 +96,9 @@ namespace ProductPortal.Web.Controllers
             var result = await _userService.UpdateUserAsync(updateDto);
             if (!result.Success)
             {
-                TempData["ErrorMessage"] = result.Message;
                 return View(updateDto);
             }
 
-            TempData["SuccessMessage"] = "Kullanıcı başarıyla güncellendi.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -129,13 +109,9 @@ namespace ProductPortal.Web.Controllers
             {
                 if (id <= 0)
                 {
-                    _logger.LogError($"Geçersiz ID: {id}");
-                    TempData["ErrorMessage"] = "Geçersiz kullanıcı ID";
+                  
                     return RedirectToAction(nameof(Index));
                 }
-
-                _logger.LogInformation($"Silme işlemi başlatıldı. ID: {id}");
-
                 var result = await _userService.DeleteUserAsync(id);
 
                 if (result.Success)

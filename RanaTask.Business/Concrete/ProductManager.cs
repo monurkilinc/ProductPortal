@@ -20,7 +20,7 @@ namespace ProductPortal.Business.Concrete
         {
 
             this.productRepository = productRepository;
-            this.cacheService=cacheService;
+            this.cacheService = cacheService;
             this.logger = logger;
             this.httpContextAccessor = httpContextAccessor;
         }
@@ -29,7 +29,6 @@ namespace ProductPortal.Business.Concrete
         {
             try
             {
-                // Aynı ürün koduna sahip başka bir ürün olup olmadığını kontrol et
                 if (await productRepository.GetProductByCodeAsync(product.Code) != null)
                 {
                     return new ErrorDataResult<Product>(
@@ -38,7 +37,6 @@ namespace ProductPortal.Business.Concrete
                         "Bu ürün kodu başka bir ürün tarafından kullanılıyor!");
                 }
 
-                // Validasyonlar
                 if (product.Price <= 0)
                 {
                     return new ErrorDataResult<Product>(
@@ -47,11 +45,9 @@ namespace ProductPortal.Business.Concrete
                         "Ürün fiyatı 0'dan büyük olmalıdır!");
                 }
 
-                // Ürünün oluşturulma tarihini ve aktiflik durumunu ayarla
                 product.CreatedDate = DateTime.Now;
                 product.IsActive = true;
 
-                // Ürünü ekle
                 var createdProduct = await productRepository.AddAsync(product);
 
                 return new SuccessDataResult<Product>(
@@ -62,13 +58,11 @@ namespace ProductPortal.Business.Concrete
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "CreateAsync metodunda hata oluştu. Product: {@Product}", product);
                 return new ErrorDataResult<Product>(
                     logger,
                     httpContextAccessor,
                     "Ürün oluşturulurken bir hata oluştu!");
             }
-
         }
         public async Task<IResult> DeleteAsync(int id)
         {
@@ -94,7 +88,6 @@ namespace ProductPortal.Business.Concrete
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "DeleteAsync metodunda hata olustu. ProductId: {ProductId}", id);
                 return new ErrorDataResult<Product>(
                     logger,
                     httpContextAccessor,
@@ -122,7 +115,6 @@ namespace ProductPortal.Business.Concrete
                         "Bu urun kodu baska bir urun tarafindan kullaniliyor!");
                 }
 
-                // Validasyonlar
                 if (product.Price <= 0)
                 {
                     return new ErrorDataResult<Product>(
@@ -131,7 +123,6 @@ namespace ProductPortal.Business.Concrete
                         "Urun fiyati 0'dan buyuk olmalidir!");
                 }
 
-                // Mevcut ürünün değişmeyecek bilgilerini koru
                 product.CreatedDate = existingProduct.CreatedDate;
                 product.IsActive = existingProduct.IsActive;
 
@@ -143,7 +134,6 @@ namespace ProductPortal.Business.Concrete
                 existingProduct.ImageURL = product.ImageURL;
                 existingProduct.UpdatedDate = DateTime.Now;
 
-                // Güncelleme yap
                 var updatedProduct = await productRepository.UpdateAsync(existingProduct);
 
                 return new SuccessDataResult<Product>(
@@ -154,7 +144,6 @@ namespace ProductPortal.Business.Concrete
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "UpdateAsync metodunda hata olustu. Product: {@Product}", product);
                 return new ErrorDataResult<Product>(
                     logger,
                     httpContextAccessor,
@@ -166,8 +155,8 @@ namespace ProductPortal.Business.Concrete
             try
             {
                 string cacheKey = "products_all";
-                var cachedProducts = cacheService.Get<List<Product>>(cacheKey);
 
+                var cachedProducts = cacheService.Get<List<Product>>(cacheKey);
                 if (cachedProducts != null)
                 {
                     return new SuccessDataResult<List<Product>>(
@@ -178,6 +167,7 @@ namespace ProductPortal.Business.Concrete
                 }
 
                 var products = (await productRepository.GetAllAsync()).ToList();
+
                 cacheService.Set(cacheKey, products, TimeSpan.FromMinutes(5));
 
                 return new SuccessDataResult<List<Product>>(
@@ -215,7 +205,6 @@ namespace ProductPortal.Business.Concrete
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "GetByCodeAsync metodunda hata olustu. Code: {Code}", code);
                 return new ErrorDataResult<Product>(
                     logger,
                     httpContextAccessor,
@@ -227,14 +216,15 @@ namespace ProductPortal.Business.Concrete
             try
             {
                 var getProductsById = await productRepository.GetByIdAsync(id);
-                if(getProductsById is null)
+                if (getProductsById is null)
                 {
                     return new ErrorDataResult<Product>(
-                        logger,
-                        httpContextAccessor,
-                        getProductsById,
-                        "Urunler bulunamadi!");
+                 logger,
+                 httpContextAccessor,
+                 null,
+                 "Ürün bulunamadı!");
                 }
+
                 return new SuccessDataResult<Product>(
                     logger,
                     httpContextAccessor,
@@ -242,15 +232,14 @@ namespace ProductPortal.Business.Concrete
                     "Urunler basariyla Id degerine gore getirildi"
                     );
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                logger.LogError(ex, "GetByIdAsync metodunda hata olustu. ProductId: {ProductId}", id);
                 return new ErrorDataResult<Product>(
                     logger,
                     httpContextAccessor,
-                    "Urunler Id degerine gore getirilirken bir hata olustur");
+                    null,
+                    "Ürün getirilirken bir hata oluştu");
             }
         }
-
     }
 }
