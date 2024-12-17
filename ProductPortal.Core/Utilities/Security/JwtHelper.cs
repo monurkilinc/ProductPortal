@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using ProductPortal.Core.Entities.Concrete;
+using ProductPortal.Core.Entities.Aggregates;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;

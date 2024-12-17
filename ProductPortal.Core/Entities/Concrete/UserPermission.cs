@@ -1,4 +1,5 @@
-﻿using ProductPortal.Core.Enums;
+﻿using ProductPortal.Core.Entities.Aggregates;
+using ProductPortal.Core.Enums;
 
 namespace ProductPortal.Core.Entities.Concrete
 {

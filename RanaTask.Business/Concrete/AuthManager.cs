@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ProductPortal.Business.Abstract;
-using ProductPortal.Core.Entities.Concrete;
 using ProductPortal.Core.Entities.DTOs;
 using ProductPortal.Core.Utilities.Interfaces;
 using ProductPortal.Core.Utilities.Results;
 using ProductPortal.DataAccess.Abstract;
 using ProductPortal.Core.Utilities.Security;
+using ProductPortal.Core.Entities.Aggregates;
 
 namespace ProductPortal.Business.Concrete
 {

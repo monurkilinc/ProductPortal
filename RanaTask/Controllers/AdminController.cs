@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProductPortal.Business.Abstract;
-using ProductPortal.Core.Entities.Concrete;
+using ProductPortal.Core.Entities.Aggregates;
 using ProductPortal.Core.Entities.DTOs;
 
 namespace ProductPortal.Web.Controllers

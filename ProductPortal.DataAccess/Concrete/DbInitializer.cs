@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ProductPortal.Core.Entities.Aggregates;
 using ProductPortal.Core.Entities.Concrete;
 using ProductPortal.Core.Utilities.Security;
 using ProductPortal.DataAccess.Abstract;

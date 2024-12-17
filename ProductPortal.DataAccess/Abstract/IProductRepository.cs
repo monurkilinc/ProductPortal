@@ -1,4 +1,4 @@
-﻿using ProductPortal.Core.Entities.Concrete;
+﻿using ProductPortal.Core.Entities.Aggregates;
 
 namespace ProductPortal.DataAccess.Abstract
 {
@@ -7,6 +7,7 @@ namespace ProductPortal.DataAccess.Abstract
         Task<IEnumerable<Product>> GetProductsByPriceRange(decimal minPrice, decimal maxPrice);
         Task<Product> GetProductByCodeAsync(string code);
         Task<IEnumerable<Product>> GetAllAsync();
-
+        Task<Product> GetByCodeAsync(string code);
     }
 }
+    

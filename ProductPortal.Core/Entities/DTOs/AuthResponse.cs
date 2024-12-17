@@ -1,4 +1,4 @@
-﻿using ProductPortal.Core.Entities.Concrete;
+﻿using ProductPortal.Core.Entities.Aggregates;
 using ProductPortal.Core.Utilities.Security;
 using System;
 using System.Collections.Generic;

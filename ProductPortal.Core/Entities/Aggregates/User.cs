@@ -1,12 +1,13 @@
-﻿using System;
+﻿using ProductPortal.Core.Entities.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProductPortal.Core.Entities.Concrete
+namespace ProductPortal.Core.Entities.Aggregates
 {
-    public class User : BaseEntity
+    public class User : BaseEntity, IAggregateRoot
     {
         public string Username { get; set; }
         public string Password { get; set; }

@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ProductPortal.Core.Entities.Concrete;
+using ProductPortal.Core.Entities.Aggregates;
 using ProductPortal.DataAccess.Abstract;
 using ProductPortal.DataAccess.Contexts;
 
@@ -58,6 +58,13 @@ namespace ProductPortal.DataAccess.Concrete
                 var innerMessage = ex.InnerException?.Message ?? "No inner exception";
                 throw new Exception($"Veritabanından ürünler alınırken bir hata oluştu. Detay: {ex.Message}, Inner: {innerMessage}", ex);
             }
+        }
+
+        public async Task<Product> GetByCodeAsync(string code)
+        {
+            return await _dbSet
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Code == code);
         }
     }
 }

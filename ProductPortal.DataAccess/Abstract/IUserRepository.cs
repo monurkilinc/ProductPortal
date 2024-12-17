@@ -1,4 +1,4 @@
-﻿using ProductPortal.Core.Entities.Concrete;
+﻿using ProductPortal.Core.Entities.Aggregates;
 
 namespace ProductPortal.DataAccess.Abstract
 {

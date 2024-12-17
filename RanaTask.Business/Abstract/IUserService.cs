@@ -1,4 +1,4 @@
-﻿using ProductPortal.Core.Entities.Concrete;
+﻿using ProductPortal.Core.Entities.Aggregates;
 using ProductPortal.Core.Entities.DTOs;
 using ProductPortal.Core.Utilities.Interfaces;
 using ProductPortal.Core.Utilities.Results;

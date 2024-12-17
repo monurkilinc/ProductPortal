@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProductPortal.Business.Abstract;
-using ProductPortal.Core.Entities.Concrete;
+using ProductPortal.Core.Entities.Aggregates;
 using System.Net.Mime;
 
 namespace ProductPortal.Web.Controllers

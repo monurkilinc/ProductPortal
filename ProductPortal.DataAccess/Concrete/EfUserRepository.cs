@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using ProductPortal.Core.Entities.Concrete;
+using ProductPortal.Core.Entities.Aggregates;
 using ProductPortal.DataAccess.Abstract;
 using ProductPortal.DataAccess.Contexts;
 using System;

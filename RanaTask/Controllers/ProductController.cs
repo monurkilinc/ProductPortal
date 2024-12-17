@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ProductPortal.Business.Abstract;
-using ProductPortal.Core.Entities.Concrete;
+using ProductPortal.Business.Commands.Product;
+using ProductPortal.Business.Queries.Product;
+using ProductPortal.Business.Queries.User;
+using ProductPortal.Core.Entities.Aggregates;
 using ProductPortal.Core.Utilities.Results;
 using System.Security.Policy;
 
@@ -11,16 +15,12 @@ namespace ProductPortal.Web.Controllers
     [Authorize]
     public class ProductController : Controller
     {
-        private readonly IProductService _productService;
-        private readonly IUserService _userService;
-        private readonly ILogger<ProductController> _logger;
+        private readonly IMediator _mediator;
         private readonly IWebHostEnvironment _environment;
 
-        public ProductController(IProductService productService, IUserService userService, ILogger<ProductController> logger, IWebHostEnvironment environment)
+        public ProductController(IMediator mediator, IWebHostEnvironment environment)
         {
-            _productService = productService;
-            _userService = userService;
-            _logger = logger;
+            _mediator = mediator;
             _environment = environment;
         }
         [Authorize]
@@ -28,10 +28,12 @@ namespace ProductPortal.Web.Controllers
         {
 
             var username = User.Identity.Name;
-            var currentUser = await _userService.GetUserByNameAsync(username);
+            var currentUser = await _mediator.Send(new GetUserByNameQuery(username));
             ViewBag.CurrentUser = currentUser.Data;
 
-            var getAll = await _productService.GetAllAsync();
+            var getAllQuerry = new GetAllProductsQuery();
+            var getAll = await _mediator.Send(getAllQuerry);
+
             if (getAll.Success)
             {
                 return View(getAll.Data);
@@ -47,23 +49,22 @@ namespace ProductPortal.Web.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([FromForm] Product product, IFormFile ImageFile)
+        public async Task<IActionResult> Create([FromForm] CreateProductCommand command, IFormFile ImageFile)
         {
             try
             {
                 if (!ModelState.IsValid)
                 {
-                    
-                    return View(product);
+
+                    return View(command);
                 }
 
                 if (ImageFile != null && ImageFile.Length > 0)
                 {
-                    product.ImageURL = await SaveImage(ImageFile);
+                    command.ImageURL = await SaveImage(ImageFile);
                 }
 
-                product.CreatedDate = DateTime.Now;
-                var result = await _productService.AddAsync(product);
+                var result = await _mediator.Send(command);
 
                 if (result.Success)
                 {
@@ -72,19 +73,21 @@ namespace ProductPortal.Web.Controllers
                 }
 
                 ModelState.AddModelError(string.Empty, result.Message);
-                return View(product);
+                return View(command);
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError(string.Empty, "Ürün oluşturulurken bir hata oluştu");
-                return View(product);
+                return View(command);
             }
         }
-        
+
         [Authorize]
         public async Task<IActionResult> Edit(int id)
         {
-            var result = await _productService.GetByIdAsync(id);
+            var query = new GetProductByIdQuery(id);
+            var result = await _mediator.Send(query);
+
             if (result.Success && result.Data != null)
             {
                 return View(result.Data);
@@ -99,7 +102,7 @@ namespace ProductPortal.Web.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Product product, IFormFile ImageFile)
+        public async Task<IActionResult> Edit(UpdateProductCommand command, IFormFile ImageFile)
         {
             try
             {
@@ -114,34 +117,26 @@ namespace ProductPortal.Web.Controllers
                 }
                 if (ImageFile != null && ImageFile.Length > 0)
                 {
-                    product.ImageURL = await SaveImage(ImageFile);
+                    command.ImageURL = await SaveImage(ImageFile);
                 }
                 else
                 {
-                    var existingProduct = await _productService.GetByIdAsync(product.Id);
+                    var getProductQuery = new GetProductByIdQuery(command.Id);
+                    var existingProduct = await _mediator.Send(getProductQuery);
                     if (existingProduct.Success && existingProduct.Data != null)
                     {
-                        product.ImageURL = existingProduct.Data.ImageURL;
+                        command.ImageURL = existingProduct.Data.ImageURL;
                     }
                 }
-
-                if (product.Id == 0) 
-                {
-                    product.CreatedDate = DateTime.Now;
-                    product.IsActive = true; 
-                }
-                else
-                {
-                    product.UpdatedDate = DateTime.Now; 
-                }
-
-                var result = await _productService.UpdateAsync(product); if (result.Success)
+                var result = await _mediator.Send(command);
+                if (result.Success)
                 {
                     TempData["SuccessMessage"] = "Ürün başarıyla güncellendi.";
                     return RedirectToAction("Index");
                 }
+
                 ModelState.AddModelError(string.Empty, result.Message);
-                return View(product);
+                return View(command);
             }
             catch (Exception ex)
             {
@@ -156,7 +151,9 @@ namespace ProductPortal.Web.Controllers
         {
             try
             {
-                var result = await _productService.DeleteAsync(id);
+                var command = new DeleteProductCommand(id);
+                var result = await _mediator.Send(command);
+
                 if (result.Success)
                 {
                     TempData["SuccessMessage"] = "Ürün başarıyla silindi.";
@@ -170,7 +167,7 @@ namespace ProductPortal.Web.Controllers
             }
             catch (Exception ex)
             {
-               
+
                 TempData["ErrorMessage"] = "Ürün silinirken bir hata oluştu.";
                 return RedirectToAction("Index");
             }

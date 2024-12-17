@@ -17,6 +17,9 @@ using Serilog;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
 using StackExchange.Redis;
+using MediatR;
+using System.Reflection;
+using ProductPortal.Business.Handlers.Product;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -118,6 +121,10 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "ProductPortal_";
 
 });
+
+
+builder.Services.AddMediatR(typeof(GetProductByIdHandler).Assembly);
+
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ProductPortalContext>();

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ProductPortal.Core.Entities.Aggregates;
 using ProductPortal.Core.Entities.Concrete;
 
 namespace ProductPortal.DataAccess.Contexts

@@ -1,4 +1,4 @@
-﻿using ProductPortal.Core.Entities.Concrete;
+﻿using ProductPortal.Core.Entities.Aggregates;
 using ProductPortal.Core.Utilities.Interfaces;
 using IResult = ProductPortal.Core.Utilities.Results.IResult;
 
